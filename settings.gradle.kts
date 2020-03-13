@@ -9,3 +9,4 @@ enableFeaturePreview("GRADLE_METADATA")
 }*/
 
 include(":core")
+include(":examples")
