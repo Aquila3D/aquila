@@ -3,6 +3,14 @@ package org.aquila3d.core.math
 import kotlin.jvm.JvmStatic
 import kotlin.math.sqrt
 
+/**
+ * Mutable representation of a direction and magnitude in 3D space.
+ *
+ * Most methods in this class support chaining for continuous math operations on the same instance. The class also
+ * provides utility methods for generating a new [Vector3] from the operation as well as appropriate operator overloads.
+ *
+ * This class is not thread safe.
+ */
 open class Vector3 {
 
     var x: Double
