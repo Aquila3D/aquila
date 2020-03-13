@@ -1,0 +1,19 @@
+defaults: &defaults
+  working_directory: ~/repo
+  docker:
+    - image: toxicbakery/alpine-glibc-android:1.x
+  environment:
+    TERM: dumb
+
+version: 2
+jobs:
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: |
+            echo "org.gradle.parallel=false" >> gradle.properties
+            ./gradlew build --no-daemon
+            bash <(curl -s https://codecov.io/bash)
