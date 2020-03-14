@@ -20,4 +20,5 @@ jobs:
           name: Build
           command: |
             echo "org.gradle.parallel=false" >> gradle.properties
-            ./gradlew build --no-daemon --stacktrace
+            echo "CHROMIUM_FLAGS=\"--no-sandbox --headless --disable-gpu\"" > ~/.chromium-browser.init
+            ./gradlew build --no-daemon --stacktrace -x detekt
