@@ -94,12 +94,33 @@ class Vector3Tests {
         assertEquals(12.0, output.z, "Invalid Z component")
     }
 
+
     @Test
     fun testTimesVector3Operator() {
         val u = Vector3(1.0, 2.0, 3.0)
         val v = Vector3(1.0, 5.0, 7.0)
         val output = u * v
         assertEquals(32.0, output, "Invalid dot product")
+    }
+
+    @Test
+    fun testDivFloatOperator() {
+        val u = Vector3(2.0, 4.0, 6.0)
+        val output = u / 2f
+        assertSame(u, output, "Not the same instance.")
+        assertEquals(1.0, output.x, "Invalid X component")
+        assertEquals(2.0, output.y, "Invalid Y component")
+        assertEquals(3.0, output.z, "Invalid Z component")
+    }
+
+    @Test
+    fun testDivDoubleOperator() {
+        val u = Vector3(2.0, 4.0, 6.0)
+        val output = u / 2.0
+        assertSame(u, output, "Not the same instance.")
+        assertEquals(1.0, output.x, "Invalid X component")
+        assertEquals(2.0, output.y, "Invalid Y component")
+        assertEquals(3.0, output.z, "Invalid Z component")
     }
 
     @Test
@@ -170,6 +191,26 @@ class Vector3Tests {
         assertEquals(3.0, output.x, "Invalid X component")
         assertEquals(9.0, output.y, "Invalid Y component")
         assertEquals(12.0, output.z, "Invalid Z component")
+    }
+
+    @Test
+    fun testDivFloat() {
+        val u = Vector3(2.0, 4.0, 6.0)
+        val output = u.divide(2f)
+        assertSame(u, output, "Not the same instance.")
+        assertEquals(1.0, output.x, "Invalid X component")
+        assertEquals(2.0, output.y, "Invalid Y component")
+        assertEquals(3.0, output.z, "Invalid Z component")
+    }
+
+    @Test
+    fun testDivDouble() {
+        val u = Vector3(2.0, 4.0, 6.0)
+        val output = u.divide(2.0)
+        assertSame(u, output, "Not the same instance.")
+        assertEquals(1.0, output.x, "Invalid X component")
+        assertEquals(2.0, output.y, "Invalid Y component")
+        assertEquals(3.0, output.z, "Invalid Z component")
     }
 
     @Test
