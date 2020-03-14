@@ -1,0 +1,5 @@
+defaults: &defaults
+
+branches:
+  ignore:
+    - docker
