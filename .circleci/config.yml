@@ -3,3 +3,11 @@ defaults: &defaults
 branches:
   ignore:
     - docker
+
+version: 2
+jobs:
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+
