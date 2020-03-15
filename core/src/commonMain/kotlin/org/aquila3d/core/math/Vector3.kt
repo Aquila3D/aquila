@@ -23,11 +23,7 @@ open class Vector3 {
     /**
      * Constructs a zero [Vector3] where all components are initialized to 0.
      */
-    constructor() {
-        x = 0.0
-        y = 0.0
-        z = 0.0
-    }
+    constructor(): this(0.0, 0.0, 0.0)
 
     /**
      * Constructs a new [Vector3] from the provided [Float] components.
@@ -46,47 +42,25 @@ open class Vector3 {
     /**
      * Constructs a new unit [Vector3] from a provided [Vector3].
      */
-    constructor(other: Vector3) {
-        x = other.x
-        y = other.y
-        z = other.z
-    }
+    constructor(other: Vector3): this(other.x, other.y, other.z)
 
-    operator fun unaryMinus() {
-        invert()
-    }
+    operator fun unaryMinus() = invert()
 
-    operator fun plus(other: Vector3): Vector3 {
-        return add(other)
-    }
+    operator fun plus(other: Vector3): Vector3 = add(other)
 
-    operator fun minus(other: Vector3): Vector3 {
-        return subtract(other)
-    }
+    operator fun minus(other: Vector3): Vector3 = subtract(other)
 
-    operator fun times(scale: Float): Vector3 {
-        return multiply(scale)
-    }
+    operator fun times(scale: Float): Vector3 = multiply(scale)
 
-    operator fun times(scale: Double): Vector3 {
-        return multiply(scale)
-    }
+    operator fun times(scale: Double): Vector3 = multiply(scale)
 
-    operator fun times(other: Vector3): Double {
-        return dot(other)
-    }
+    operator fun times(other: Vector3): Double = dot(other)
 
-    operator fun div(scale: Float): Vector3 {
-        return divide(scale)
-    }
+    operator fun div(scale: Float): Vector3 = divide(scale)
 
-    operator fun div(scale: Double): Vector3 {
-        return divide(scale)
-    }
+    operator fun div(scale: Double): Vector3 = divide(scale)
 
-    fun magnitude(): Double {
-        return sqrt(x * x + y * y + z * z)
-    }
+    fun magnitude(): Double = sqrt(x * x + y * y + z * z)
 
     fun normalize(): Vector3 {
         val magnitude = magnitude()
@@ -114,9 +88,7 @@ open class Vector3 {
         return this
     }
 
-    fun multiply(scale: Float): Vector3 {
-        return multiply(scale.toDouble())
-    }
+    fun multiply(scale: Float): Vector3 = multiply(scale.toDouble())
 
     fun multiply(scale: Double): Vector3 {
         x *= scale
@@ -133,9 +105,7 @@ open class Vector3 {
         return Quaternion(wNew, xNew, yNew, zNew)
     }
 
-    fun divide(scale: Float): Vector3 {
-        return divide(scale.toDouble())
-    }
+    fun divide(scale: Float): Vector3 = divide(scale.toDouble())
 
     fun divide(scale: Double): Vector3 {
         x /= scale
@@ -186,48 +156,30 @@ open class Vector3 {
     companion object {
 
         @JvmStatic
-        fun X(): Vector3 {
-            return Vector3(1.0, 0.0, 0.0)
-        }
+        fun X(): Vector3 = Vector3(1.0, 0.0, 0.0)
 
         @JvmStatic
-        fun Y(): Vector3 {
-            return Vector3(0.0, 1.0, 0.0)
-        }
+        fun Y(): Vector3 = Vector3(0.0, 1.0, 0.0)
 
         @JvmStatic
-        fun Z(): Vector3 {
-            return Vector3(0.0, 0.0, 1.0)
-        }
+        fun Z(): Vector3 = Vector3(0.0, 0.0, 1.0)
 
         @JvmStatic
-        fun NEG_X(): Vector3 {
-            return X().invert()
-        }
+        fun NEG_X(): Vector3 = X().invert()
 
         @JvmStatic
-        fun NEG_Y(): Vector3 {
-            return Y().invert()
-        }
+        fun NEG_Y(): Vector3 = Y().invert()
 
         @JvmStatic
-        fun NEG_Z(): Vector3 {
-            return Z().invert()
-        }
+        fun NEG_Z(): Vector3 = Z().invert()
 
         @JvmStatic
-        fun cross(u: Vector3, v: Vector3): Vector3 {
-            return Vector3(u).cross(v)
-        }
+        fun cross(u: Vector3, v: Vector3): Vector3 = Vector3(u).cross(v)
 
         @JvmStatic
-        fun dot(u: Vector3, v: Vector3): Double {
-            return Vector3(u).dot(v)
-        }
+        fun dot(u: Vector3, v: Vector3): Double = Vector3(u).dot(v)
 
         @JvmStatic
-        fun scalarTripleProduct(u: Vector3, v: Vector3, w: Vector3): Double {
-            return cross(v, w).dot(u)
-        }
+        fun scalarTripleProduct(u: Vector3, v: Vector3, w: Vector3): Double = cross(v, w).dot(u)
     }
 }

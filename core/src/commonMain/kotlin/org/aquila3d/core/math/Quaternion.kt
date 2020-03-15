@@ -1,5 +1,6 @@
 package org.aquila3d.core.math
 
+import kotlin.jvm.JvmStatic
 import kotlin.math.acos
 import kotlin.math.cos
 import kotlin.math.sin
@@ -305,9 +306,9 @@ open class Quaternion {
          * @param pitch Rotation about the +X Axis, in [Degrees]
          * @param roll Rotation about the +Z Axis, in [Degrees]
          */
-        fun fromEulerAnglesDeg(yaw: Degrees, pitch: Degrees, roll: Degrees): Quaternion {
-            return Quaternion(yaw.toRadians(), pitch.toRadians(), roll.toRadians())
-        }
+        @JvmStatic
+        fun fromEulerAnglesDeg(yaw: Degrees, pitch: Degrees, roll: Degrees): Quaternion
+                = Quaternion(yaw.toRadians(), pitch.toRadians(), roll.toRadians())
 
         /**
          * Constructs a new [Quaternion] by applying the provided Euler rotation angles in order, yaw - pitch - roll.
@@ -317,8 +318,7 @@ open class Quaternion {
          * @param pitch Rotation about the +X Axis, in [Radians]
          * @param roll Rotation about the +Z Axis, in [Radians]
          */
-        fun fromEulerAnglesRad(yaw: Radians, pitch: Radians, roll: Radians): Quaternion {
-            return Quaternion(yaw, pitch, roll)
-        }
+        @JvmStatic
+        fun fromEulerAnglesRad(yaw: Radians, pitch: Radians, roll: Radians): Quaternion = Quaternion(yaw, pitch, roll)
     }
 }
