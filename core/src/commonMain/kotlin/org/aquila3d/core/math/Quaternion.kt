@@ -106,9 +106,9 @@ open class Quaternion {
         val sYawcPitch = sYaw * cPitch
 
         w = cRoll * cYawcPitch + sRoll * sYawsPitch
-        x = sRoll * cYawcPitch - cRoll * sYawsPitch
-        y = cRoll * cYawsPitch + sRoll * sYawcPitch
-        z = cRoll * sYawcPitch - sRoll * cYawsPitch
+        x = cRoll * cYawsPitch + sRoll * sYawcPitch
+        y = cRoll * sYawcPitch - sRoll * cYawsPitch
+        z = sRoll * cYawcPitch - cRoll * sYawsPitch
     }
 
     operator fun unaryMinus() {

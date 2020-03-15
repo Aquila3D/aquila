@@ -100,33 +100,33 @@ class QuaternionTests {
         val x90 = Quaternion(Radians(0.0), Degrees(90.0).toRadians(), Radians(0.0))
         assertNotNull(x90)
         assertTrue(abs(sqrt2o2 - x90.w) <= 1e-12, "x90 Invalid W component: $x90")
-        assertEquals(0.0, x90.x, "x90 Invalid X component $x90")
-        assertTrue(abs(sqrt2o2 - x90.y) <= 1e-12, "x90 Invalid Y component: $x90")
+        assertTrue(abs(sqrt2o2 - x90.x) <= 1e-12, "x90 Invalid X component: $x90")
+        assertEquals(0.0, x90.y, "x90 Invalid Y component $x90")
         assertEquals(0.0, x90.z, "x90 Invalid Z component $x90")
 
         // Test 90 degrees about Y
         val y90 = Quaternion(Degrees(90.0).toRadians(), Radians(0.0), Radians(0.0))
         assertNotNull(y90)
-        assertTrue(abs(sqrt2o2 - y90.w) <= 1e-12, "y90 Invalid W component: " + y90.w)
-        assertEquals(0.0, y90.x, "y90 Invalid X component")
-        assertEquals(0.0, y90.y, "y90 Invalid Y component")
-        assertTrue(abs(sqrt2o2 - y90.z) <= 1e-12, "y90 Invalid Z component: " + y90.z)
+        assertTrue(abs(sqrt2o2 - y90.w) <= 1e-12, "y90 Invalid W component: $y90")
+        assertEquals(0.0, y90.x, "y90 Invalid X component: $y90")
+        assertTrue(abs(sqrt2o2 - y90.y) <= 1e-12, "y90 Invalid Y component: $y90")
+        assertEquals(0.0, y90.z, "y90 Invalid Z component: $y90")
 
         // Test 90 degrees about Z
         val z90 = Quaternion(Radians(0.0), Radians(0.0), Degrees(90.0).toRadians())
         assertNotNull(z90)
-        assertTrue(abs(sqrt2o2 - z90.w) <= 1e-12, "z90 Invalid W component: " + z90.w)
-        assertTrue(abs(sqrt2o2 - z90.x) <= 1e-12, "z90 Invalid X component: " + z90.x)
-        assertEquals(0.0, z90.y, "z90 Invalid Y component")
-        assertEquals(0.0, z90.z, "z90 Invalid Z component")
+        assertTrue(abs(sqrt2o2 - z90.w) <= 1e-12, "z90 Invalid W component: $z90")
+        assertEquals(0.0, z90.x, "z90 Invalid X component: $z90")
+        assertEquals(0.0, z90.y, "z90 Invalid Y component: $z90")
+        assertTrue(abs(sqrt2o2 - z90.z) <= 1e-12, "z90 Invalid Z component: $z90")
 
         // Test 30 degrees about Y, 60 about X, 90 about Z
         val q = Quaternion(Degrees(30.0).toRadians(), Degrees(60.0).toRadians(), Degrees(90.0).toRadians())
         assertNotNull(q)
-        assertTrue(abs(0.6830127018922193 - q.w) <= 1e-12, "q Invalid W component: " + q.w)
-        assertTrue(abs(0.5 - q.x) <= 1e-12, "q Invalid X component: " + q.x)
-        assertTrue(abs(0.5 - q.y) <= 1e-12, "q Invalid Y component: " + q.y)
-        assertTrue(abs(-0.18301270189221924 - q.z) <= 1e-12, "q Invalid Z component: " + q.z)
+        assertTrue(abs(0.6830127018922193 - q.w) <= 1e-12, "q Invalid W component: $q")
+        assertTrue(abs(0.5 - q.x) <= 1e-12, "q Invalid X component: $q")
+        assertTrue(abs(-0.18301270189221924 - q.y) <= 1e-12, "q Invalid Y component: $q")
+        assertTrue(abs(0.5 - q.z) <= 1e-12, "q Invalid Z component: $q")
     }
 
     @Test
