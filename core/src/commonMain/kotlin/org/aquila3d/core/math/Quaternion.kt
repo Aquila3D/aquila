@@ -99,10 +99,16 @@ open class Quaternion {
         val cPitch = cos(hPitch)
         val sRoll = sin(hRoll)
         val cRoll = cos(hRoll)
-        w = cRoll * cPitch * cYaw + sRoll * sPitch * sYaw
-        x = sRoll * cPitch * cYaw - cRoll * sPitch * sYaw
-        y = cRoll * sPitch * cYaw + sRoll * cPitch * sYaw
-        z = cRoll * cPitch * sYaw - sRoll * sPitch * cYaw
+
+        val cYawcPitch = cYaw * cPitch
+        val sYawsPitch = sYaw * sPitch
+        val cYawsPitch = cYaw * sPitch
+        val sYawcPitch = sYaw * cPitch
+
+        w = cRoll * cYawcPitch + sRoll * sYawsPitch
+        x = sRoll * cYawcPitch - cRoll * sYawsPitch
+        y = cRoll * cYawsPitch + sRoll * sYawcPitch
+        z = cRoll * sYawcPitch - sRoll * cYawsPitch
     }
 
     operator fun unaryMinus() {
@@ -130,7 +136,7 @@ open class Quaternion {
     }
 
     operator fun times(other: Quaternion): Quaternion {
-        return dot(other)
+        return multiply(other)
     }
 
     operator fun div(scale: Float): Quaternion {
@@ -217,11 +223,19 @@ open class Quaternion {
     }
 
     fun multiply(other: Quaternion): Quaternion {
-        return dot(other)
+        val wNew = w * other.w - x * other.x - y * other.y - z * other.z
+        val xNew = w * other.x + x * other.w + y * other.z - z * other.y
+        val yNew = w * other.y + y * other.w + z * other.x - x * other.z
+        val zNew = w * other.z + z * other.w + x * other.y - y * other.x
+        w = wNew
+        x = xNew
+        y = yNew
+        z = zNew
+        return this
     }
 
     fun divide(scale: Float): Quaternion {
-        return multiply(scale.toDouble())
+        return divide(scale.toDouble())
     }
 
     fun divide(scale: Double): Quaternion {
@@ -244,29 +258,6 @@ open class Quaternion {
         return this
     }
 
-    fun dot(other: Quaternion): Quaternion {
-        val wNew = w * other.w - x * other.x - y * other.y - z * other.z
-        val xNew = w * other.x + x * other.w + y * other.z - z * other.y
-        val yNew = w * other.y + y * other.w + z * other.x - x * other.z
-        val zNew = w * other.z + z * other.w + x * other.y - y * other.x
-        w = wNew
-        x = xNew
-        y = yNew
-        z = zNew
-        return this
-    }
-
-    /**
-     * Rotates this [Quaternion] by [other]. Mathematically this is equivalent to:
-     *
-     * **p'** = **q** * **p** * ~**q**
-     */
-    fun rotate(other: Quaternion): Quaternion {
-        val rotation = Quaternion(other)
-        val conj = Quaternion(other).invert()
-        return (rotation.dot(this).dot(conj)).normalize()
-    }
-
     /**
      * Rotates [vector3] by the rotation represented in this [Quaternion]. Mathematically this is equivalent to:
      *
@@ -275,7 +266,33 @@ open class Quaternion {
     fun rotate(vector3: Vector3): Vector3 {
         val rotation = Quaternion(this)
         val conj = Quaternion(this).invert()
-        return (rotation.multiply(vector3).dot(conj).getAxis())
+        return (rotation.multiply(vector3).multiply(conj).getAxis())
+    }
+
+    override fun toString(): String {
+        return "Quaternion(w=$w, x=$x, y=$y, z=$z)"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as Quaternion
+
+        if (w != other.w) return false
+        if (x != other.x) return false
+        if (y != other.y) return false
+        if (z != other.z) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = w.hashCode()
+        result = 31 * result + x.hashCode()
+        result = 31 * result + y.hashCode()
+        result = 31 * result + z.hashCode()
+        return result
     }
 
     companion object {
