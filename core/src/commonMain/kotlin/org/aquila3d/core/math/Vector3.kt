@@ -11,7 +11,7 @@ import kotlin.math.sqrt
  *
  * This class is not thread safe.
  */
-open class Vector3 {
+class Vector3 {
 
     var x: Double
         private set

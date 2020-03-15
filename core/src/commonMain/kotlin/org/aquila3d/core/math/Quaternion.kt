@@ -20,7 +20,7 @@ import kotlin.math.sqrt
  * rotations, provide smooth interpolation between orientations and reduce the number of computations needed for any
  * given mutation.
  */
-open class Quaternion {
+class Quaternion {
 
     var w: Double
         private set
