@@ -24,6 +24,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(kotlin("stdlib-common"))
+                implementation(project(":core"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-common:${findProperty("kotlin_coroutines_version")}")
                 implementation("com.ToxicBakery.logging:common:${findProperty("arbor_version")}")
             }
