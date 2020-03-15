@@ -1,9 +1,14 @@
 defaults: &defaults
   working_directory: ~/repo
   docker:
-    - image: toxicbakery/alpine-glibc-android:1.x
+    - image: aquila3d/aquila3d-ci
   environment:
     TERM: dumb
+
+branches:
+  ignore:
+    - gh-pages
+    - docker
 
 version: 2
 jobs:
@@ -15,5 +20,5 @@ jobs:
           name: Build
           command: |
             echo "org.gradle.parallel=false" >> gradle.properties
-            ./gradlew build --no-daemon
-            bash <(curl -s https://codecov.io/bash)
+            echo "CHROMIUM_FLAGS=\"--no-sandbox --headless --disable-gpu\"" > ~/.chromium-browser.init
+            ./gradlew build --no-daemon --stacktrace -x detekt
