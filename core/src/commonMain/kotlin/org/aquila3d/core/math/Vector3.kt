@@ -46,58 +46,32 @@ class Vector3 {
 
     operator fun unaryMinus() = invert()
 
-    operator fun plus(other: Vector3): Vector3 = add(other)
-
-    operator fun minus(other: Vector3): Vector3 = subtract(other)
-
-    operator fun times(scale: Float): Vector3 = multiply(scale)
-
-    operator fun times(scale: Double): Vector3 = multiply(scale)
-
-    operator fun times(other: Vector3): Double = dot(other)
-
-    operator fun div(scale: Float): Vector3 = divide(scale)
-
-    operator fun div(scale: Double): Vector3 = divide(scale)
-
-    fun magnitude(): Double = sqrt(x * x + y * y + z * z)
-
-    fun normalize(): Vector3 {
-        val magnitude = magnitude()
-        return divide(magnitude)
-    }
-
-    fun invert(): Vector3 {
-        x = -x
-        y = -y
-        z = -z
-        return this
-    }
-
-    fun add(other: Vector3): Vector3 {
+    operator fun plus(other: Vector3): Vector3 {
         x += other.x
         y += other.y
         z += other.z
         return this
     }
 
-    fun subtract(other: Vector3): Vector3 {
+    operator fun minus(other: Vector3): Vector3 {
         x -= other.x
         y -= other.y
         z -= other.z
         return this
     }
 
-    fun multiply(scale: Float): Vector3 = multiply(scale.toDouble())
+    operator fun times(scale: Float): Vector3 = times(scale.toDouble())
 
-    fun multiply(scale: Double): Vector3 {
+    operator fun times(scale: Double): Vector3 {
         x *= scale
         y *= scale
         z *= scale
         return this
     }
 
-    fun multiply(quaternion: Quaternion): Quaternion {
+    operator fun times(other: Vector3): Double = (x * other.x + y * other.y + z * other.z)
+
+    operator fun times(quaternion: Quaternion): Quaternion {
         val wNew = -(x * quaternion.x + y * quaternion.y + z * quaternion.z)
         val xNew = quaternion.w * x + quaternion.z * y - quaternion.y * z
         val yNew = quaternion.w * y + quaternion.x * z - quaternion.z * x
@@ -105,12 +79,26 @@ class Vector3 {
         return Quaternion(wNew, xNew, yNew, zNew)
     }
 
-    fun divide(scale: Float): Vector3 = divide(scale.toDouble())
+    operator fun div(scale: Float): Vector3 = div(scale.toDouble())
 
-    fun divide(scale: Double): Vector3 {
+    operator fun div(scale: Double): Vector3 {
         x /= scale
         y /= scale
         z /= scale
+        return this
+    }
+
+    fun magnitude(): Double = sqrt(x * x + y * y + z * z)
+
+    fun normalize(): Vector3 {
+        val magnitude = magnitude()
+        return div(magnitude)
+    }
+
+    fun invert(): Vector3 {
+        x = -x
+        y = -y
+        z = -z
         return this
     }
 
@@ -122,10 +110,6 @@ class Vector3 {
         y = yNew
         z = zNew
         return this
-    }
-
-    fun dot(other: Vector3): Double {
-        return (x * other.x + y * other.y + z * other.z)
     }
 
     override fun toString(): String {
@@ -177,9 +161,9 @@ class Vector3 {
         fun cross(u: Vector3, v: Vector3): Vector3 = Vector3(u).cross(v)
 
         @JvmStatic
-        fun dot(u: Vector3, v: Vector3): Double = Vector3(u).dot(v)
+        fun dot(u: Vector3, v: Vector3): Double = Vector3(u) * v
 
         @JvmStatic
-        fun scalarTripleProduct(u: Vector3, v: Vector3, w: Vector3): Double = cross(v, w).dot(u)
+        fun scalarTripleProduct(u: Vector3, v: Vector3, w: Vector3): Double = u * cross(v, w)
     }
 }

@@ -75,7 +75,7 @@ class Quaternion {
      */
     constructor(angle: Radians, axis: Vector3) {
         val s = sin(angle.angle / 2.0)
-        val normAxis = Vector3(axis).normalize().multiply(s)
+        val normAxis = Vector3(axis).normalize() * s
         w = cos(angle.angle / 2.0)
         x = normAxis.x
         y = normAxis.y
@@ -117,35 +117,63 @@ class Quaternion {
     }
 
     operator fun plus(other: Quaternion): Quaternion {
-        return add(other)
+        w += other.w
+        x += other.x
+        y += other.y
+        z += other.z
+        return this
     }
 
     operator fun minus(other: Quaternion): Quaternion {
-        return subtract(other)
+        w -= other.w
+        x -= other.x
+        y -= other.y
+        z -= other.z
+        return this
     }
 
-    operator fun times(scale: Float): Quaternion {
-        return multiply(scale)
-    }
+    operator fun times(scale: Float): Quaternion = times(scale.toDouble())
 
     operator fun times(scale: Double): Quaternion {
-        return multiply(scale)
+        w *= scale
+        x *= scale
+        y *= scale
+        z *= scale
+        return this
     }
 
     operator fun times(vector3: Vector3): Quaternion {
-        return multiply(vector3)
+        val wNew = -(x * vector3.x + y * vector3.y + z * vector3.z)
+        val xNew = w * vector3.x + y * vector3.z - z * vector3.y
+        val yNew = w * vector3.y + z * vector3.x - x * vector3.z
+        val zNew = w * vector3.z + x * vector3.y - y * vector3.x
+        w = wNew
+        x = xNew
+        y = yNew
+        z = zNew
+        return this
     }
 
     operator fun times(other: Quaternion): Quaternion {
-        return multiply(other)
+        val wNew = w * other.w - x * other.x - y * other.y - z * other.z
+        val xNew = w * other.x + x * other.w + y * other.z - z * other.y
+        val yNew = w * other.y + y * other.w + z * other.x - x * other.z
+        val zNew = w * other.z + z * other.w + x * other.y - y * other.x
+        w = wNew
+        x = xNew
+        y = yNew
+        z = zNew
+        return this
     }
 
-    operator fun div(scale: Float): Quaternion {
-        return divide(scale)
-    }
+    operator fun div(scale: Float): Quaternion = div(scale.toDouble())
 
     operator fun div(scale: Double): Quaternion {
-        return divide(scale)
+        w /= scale
+        x /= scale
+        y /= scale
+        z /= scale
+        return this
     }
 
     /**
@@ -159,10 +187,7 @@ class Quaternion {
             return Vector3(0.0, 1.0, 0.0)
         }
         val divisor = sqrt(1 - w * w)
-        val xNew = x / divisor
-        val yNew = y / divisor
-        val zNew = z / divisor
-        return Vector3(xNew, yNew, zNew)
+        return (Vector3(x, y, z) / divisor)
     }
 
     /**
@@ -170,86 +195,18 @@ class Quaternion {
      *
      * @return The angle of rotation in [Radians].
      */
-    fun getAngle(): Radians {
-        return Radians(2.0 * acos(w))
-    }
+    fun getAngle(): Radians = Radians(2.0 * acos(w))
 
     /**
      * Calculates the magnitude (norm) of this [Quaternion]
      *
      * @return The magnitude (norm).
      */
-    fun magnitude(): Double {
-        return sqrt(w * w + x * x + y * y + z * z)
-    }
-
-    fun add(other: Quaternion): Quaternion {
-        w += other.w
-        x += other.x
-        y += other.y
-        z += other.z
-        return this
-    }
-
-    fun subtract(other: Quaternion): Quaternion {
-        w -= other.w
-        x -= other.x
-        y -= other.y
-        z -= other.z
-        return this
-    }
-
-    fun multiply(scale: Float): Quaternion {
-        return multiply(scale.toDouble())
-    }
-
-    fun multiply(scale: Double): Quaternion {
-        w *= scale
-        x *= scale
-        y *= scale
-        z *= scale
-        return this
-    }
-
-    fun multiply(vector3: Vector3): Quaternion {
-        val wNew = -(x * vector3.x + y * vector3.y + z * vector3.z)
-        val xNew = w * vector3.x + y * vector3.z - z * vector3.y
-        val yNew = w * vector3.y + z * vector3.x - x * vector3.z
-        val zNew = w * vector3.z + x * vector3.y - y * vector3.x
-        w = wNew
-        x = xNew
-        y = yNew
-        z = zNew
-        return this
-    }
-
-    fun multiply(other: Quaternion): Quaternion {
-        val wNew = w * other.w - x * other.x - y * other.y - z * other.z
-        val xNew = w * other.x + x * other.w + y * other.z - z * other.y
-        val yNew = w * other.y + y * other.w + z * other.x - x * other.z
-        val zNew = w * other.z + z * other.w + x * other.y - y * other.x
-        w = wNew
-        x = xNew
-        y = yNew
-        z = zNew
-        return this
-    }
-
-    fun divide(scale: Float): Quaternion {
-        return divide(scale.toDouble())
-    }
-
-    fun divide(scale: Double): Quaternion {
-        w /= scale
-        x /= scale
-        y /= scale
-        z /= scale
-        return this
-    }
+    fun magnitude(): Double = sqrt(w * w + x * x + y * y + z * z)
 
     fun normalize(): Quaternion {
         val magnitude = magnitude()
-        return divide(magnitude)
+        return div(magnitude)
     }
 
     fun invert(): Quaternion {
@@ -267,7 +224,7 @@ class Quaternion {
     fun rotate(vector3: Vector3): Vector3 {
         val rotation = Quaternion(this)
         val conj = Quaternion(this).invert()
-        return (rotation.multiply(vector3).multiply(conj).getAxis())
+        return ((rotation * vector3) * conj).getAxis()
     }
 
     override fun toString(): String {
