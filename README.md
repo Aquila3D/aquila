@@ -1,2 +1,2 @@
-# aquila [![CircleCI](https://circleci.com/gh/Aquila3D/aquila.svg?style=svg)](https://circleci.com/gh/Aquila3D/aquila)
-Aquila 3D Rendering Engine
+# Aquila 3D [![CircleCI](https://circleci.com/gh/Aquila3D/aquila.svg?style=svg)](https://circleci.com/gh/Aquila3D/aquila)
+Aquila 3D is a rendering engine built in Kotlin MPP utilizing the Vulkan 3D API. The primary goal is to support as many platforms as possible. Initial development is ongoing, but near term targets are Browser and Node JavaScript, JVM and Android. Native Linux and Windows are anticipated but due to the flux with Kotlin Native, may be harder to achieve at the moment.
