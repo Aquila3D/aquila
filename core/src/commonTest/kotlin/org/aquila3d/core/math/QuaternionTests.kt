@@ -373,5 +373,66 @@ class QuaternionTests {
     @Test
     fun testRotateVector() {
 
+        // Test 90 degrees about X
+        val x90 = Quaternion(Radians(0.0), Degrees(90.0).toRadians(), Radians(0.0))
+        val vy = Vector3.Y()
+        val resultX90 = x90.rotate(vy)
+        // After rotating a Y vector 90 degress around the X axis, we should have the +Z Vector
+        assertNotNull(resultX90)
+        assertTrue(abs(resultX90.x) <= 1e-12, "x90 Invalid X component: $resultX90")
+        assertTrue(abs(resultX90.y) <= 1e-12, "x90 Invalid Y component $resultX90")
+        assertTrue(abs(1.0 - resultX90.z) <= 1e-12, "x90 Invalid Z component $resultX90")
+
+        // Test 90 degrees about Y
+        val y90 = Quaternion(Degrees(90.0).toRadians(), Radians(0.0), Radians(0.0))
+        val vx = Vector3.X()
+        val resultY90 = y90.rotate(vx)
+        // After rotating a X vector 90 degress around the Y axis, we should have the -Z Vector
+        assertNotNull(resultY90)
+        assertTrue(abs(resultY90.x) <= 1e-12, "x90 Invalid X component: $resultY90")
+        assertTrue(abs(resultY90.y) <= 1e-12, "x90 Invalid Y component $resultY90")
+        assertTrue(abs(-1.0 - resultY90.z) <= 1e-12, "x90 Invalid Z component $resultY90")
+
+        // Test 90 degrees about Z
+        val z90 = Quaternion(Radians(0.0), Radians(0.0), Degrees(90.0).toRadians())
+        val vnx = Vector3.NEG_X()
+        val resultZ90 = z90.rotate(vnx)
+        // After rotating a -X vector 90 degress around the Z axis, we should have the -Y Vector
+        assertNotNull(resultZ90)
+        assertTrue(abs(resultZ90.x) <= 1e-12, "x90 Invalid X component: $resultZ90")
+        assertTrue(abs(-1.0 - resultZ90.y) <= 1e-12, "x90 Invalid Y component $resultZ90")
+        assertTrue(abs(resultZ90.z) <= 1e-12, "x90 Invalid Z component $resultZ90")
+    }
+
+    @Test
+    fun testCompanionFromEulerDegrees() {
+        val q = Quaternion.fromEulerAnglesDeg(Degrees(30.0), Degrees(60.0), Degrees(90.0))
+        assertNotNull(q)
+        assertTrue(abs(0.6830127018922193 - q.w) <= 1e-12, "q Invalid W component: $q")
+        assertTrue(abs(0.5 - q.x) <= 1e-12, "q Invalid X component: $q")
+        assertTrue(abs(-0.18301270189221924 - q.y) <= 1e-12, "q Invalid Y component: $q")
+        assertTrue(abs(0.5 - q.z) <= 1e-12, "q Invalid Z component: $q")
+    }
+
+    @Test
+    fun testCompanionFromEulerRadians() {
+        val q = Quaternion.fromEulerAnglesRad(Degrees(30.0).toRadians(), Degrees(60.0).toRadians(),
+            Degrees(90.0).toRadians())
+        assertNotNull(q)
+        assertTrue(abs(0.6830127018922193 - q.w) <= 1e-12, "q Invalid W component: $q")
+        assertTrue(abs(0.5 - q.x) <= 1e-12, "q Invalid X component: $q")
+        assertTrue(abs(-0.18301270189221924 - q.y) <= 1e-12, "q Invalid Y component: $q")
+        assertTrue(abs(0.5 - q.z) <= 1e-12, "q Invalid Z component: $q")
+    }
+
+    @Test
+    fun testEquals() {
+        val q = Quaternion.fromEulerAnglesRad(Degrees(30.0).toRadians(), Degrees(60.0).toRadians(),
+            Degrees(90.0).toRadians())
+        val p = Quaternion.fromEulerAnglesDeg(Degrees(30.0), Degrees(60.0), Degrees(90.0))
+        val r = Quaternion.fromEulerAnglesDeg(Degrees(0.0), Degrees(60.0), Degrees(0.0))
+
+        assertTrue(q.equals(p), "Equivalent quaternions are not equal.")
+        assertFalse(q.equals(r), "Non-equivalent quaternions are equal.")
     }
 }

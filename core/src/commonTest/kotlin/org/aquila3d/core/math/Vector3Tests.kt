@@ -233,6 +233,16 @@ class Vector3Tests {
     }
 
     @Test
+    fun testEquals() {
+        val u = Vector3(1.0, 3.0, 4.0)
+        val v = Vector3(1.0, 3.0, 4.0)
+        val w = Vector3(5.0, 6.0, 7.0)
+
+        assertTrue(u.equals(v), "Equivalent vectors are not equal.")
+        assertFalse(u.equals(w), "Non-equivalent vectors are equal.")
+    }
+
+    @Test
     fun testStaticCross() {
         val u = Vector3(1.0, 3.0, 4.0)
         val v = Vector3(5.0, 6.0, 7.0)
