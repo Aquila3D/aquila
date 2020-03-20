@@ -45,6 +45,8 @@ kotlin {
             implementation(kotlin("stdlib-js"))
             implementation("org.jetbrains.kotlinx:kotlinx-html-js:${findProperty("kotlin_html_version")}")
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:${findProperty("kotlin_coroutines_version")}")
+
+            api(npm("nvk"))
         }
         sourceSets["jsTest"].dependencies {
             implementation(kotlin("test-js"))
