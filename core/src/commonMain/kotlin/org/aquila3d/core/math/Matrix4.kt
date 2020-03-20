@@ -8,22 +8,27 @@ package org.aquila3d.core.math
  * | 2 6 10 14 |
  * | 3 7 11 15 |
  */
-class Matrix4 {
+open class Matrix4 {
 
     /**
      * Storing data this way allows us to index easier. values[0][3] represents index 3 shown above while values[3][0]
      * represents index 12.
      */
-    private val values: Array<Column> = Array(4) { Column(DoubleArray(4) { 0.0 }) }
+    protected val values: Array<Column>
 
     /**
      * Creates a new [Matrix4] initialized to the Identity matrix.
      */
     constructor() {
+        values = Array(4) { Column(DoubleArray(4) { 0.0 }) }
         values[0][0] = 1.0
         values[1][1] = 1.0
         values[2][2] = 1.0
         values[3][3] = 1.0
+    }
+
+    constructor(other: Matrix4) {
+        values = other.values
     }
 
     /**
@@ -35,7 +40,22 @@ class Matrix4 {
      * Creates a new [Matrix4] representing the translation of [translation], rotation of [rotation]
      * and scaling of [scale].
      */
-    constructor(translation: Vector3, rotation: Quaternion, scale: Vector3) {
+    constructor(translation: Vector3, rotation: Quaternion, scale: Vector3): this() {
+        internalSetFrom(translation, rotation, scale)
+    }
+
+    open fun toMatrix4(): Matrix4 = Matrix4(this)
+
+    operator fun times(vector3: Vector3): Vector3 {
+        val x = vector3.x * values[0][0] + vector3.y * values[1][0] + vector3.z * values[2][0] + values[3][0]
+        val y = vector3.x * values[0][1] + vector3.y * values[1][1] + vector3.z * values[2][1] + values[3][1]
+        val z = vector3.x * values[0][2] + vector3.y * values[1][2] + vector3.z * values[2][2] + values[3][2]
+        return Vector3(x, y, z)
+    }
+
+    operator fun get(index: Int): Column = values[index]
+
+    internal fun internalSetFrom(translation: Vector3, rotation: Quaternion, scale: Vector3): Matrix4 {
         val qxx = rotation.x * rotation.x
         val qyy = rotation.y * rotation.y
         val qzz = rotation.z * rotation.z
@@ -62,16 +82,8 @@ class Matrix4 {
         values[3][1] = translation.y
         values[3][2] = translation.z
         values[3][3] = 1.0
+        return this
     }
-
-    operator fun times(vector3: Vector3): Vector3 {
-        val x = vector3.x * values[0][0] + vector3.y * values[1][0] + vector3.z * values[2][0] + values[3][0]
-        val y = vector3.x * values[0][1] + vector3.y * values[1][1] + vector3.z * values[2][1] + values[3][1]
-        val z = vector3.x * values[0][2] + vector3.y * values[1][2] + vector3.z * values[2][2] + values[3][2]
-        return Vector3(x, y, z)
-    }
-
-    operator fun get(index: Int): Column = values[index]
 
     companion object {
 
@@ -80,6 +92,7 @@ class Matrix4 {
          */
         private val noScale = Vector3(1.0, 1.0, 1.0)
     }
+
 }
 
 inline class Column(val array: DoubleArray) {

@@ -158,6 +158,9 @@ class Vector3 {
         fun NEG_Z(): Vector3 = Z().invert()
 
         @JvmStatic
+        fun ONES(): Vector3 = Vector3(1.0, 1.0, 1.0)
+
+        @JvmStatic
         fun cross(u: Vector3, v: Vector3): Vector3 = Vector3(u).cross(v)
 
         @JvmStatic
