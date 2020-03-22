@@ -4,5 +4,4 @@ package nvk
 
 external class VkBuffer
 
-external class VulkanWindow
-
+open external class VulkanWindow

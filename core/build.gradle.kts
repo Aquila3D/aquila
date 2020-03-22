@@ -1,6 +1,22 @@
+import org.gradle.internal.os.OperatingSystem
+
 plugins {
     id("org.jetbrains.kotlin.multiplatform")
     id("io.gitlab.arturbosch.detekt")
+}
+
+val lwjglVersion = "3.2.3"
+
+val lwjglNatives = when (OperatingSystem.current()) {
+    OperatingSystem.LINUX   -> System.getProperty("os.arch").let {
+        if (it.startsWith("arm") || it.startsWith("aarch64"))
+            "natives-linux-${if (it.contains("64") || it.startsWith("armv8")) "arm64" else "arm32"}"
+        else
+            "natives-linux"
+    }
+    OperatingSystem.MAC_OS  -> "natives-macos"
+    OperatingSystem.WINDOWS -> "natives-windows"
+    else -> throw Error("Unrecognized or unsupported Operating system. Please set \"lwjglNatives\" manually")
 }
 
 kotlin {
@@ -37,6 +53,25 @@ kotlin {
         sourceSets["jvmMain"].dependencies {
             implementation(kotlin("stdlib-jdk8"))
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${findProperty("kotlin_coroutines_version")}")
+
+            implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
+
+            implementation("org.lwjgl:lwjgl:$lwjglVersion")
+            implementation("org.lwjgl:lwjgl-assimp:$lwjglVersion")
+            implementation("org.lwjgl:lwjgl-glfw:$lwjglVersion")
+            implementation("org.lwjgl:lwjgl-openal:$lwjglVersion")
+            implementation("org.lwjgl:lwjgl-stb:$lwjglVersion")
+            implementation("org.lwjgl:lwjgl-vma:$lwjglVersion")
+            implementation("org.lwjgl:lwjgl-vulkan:$lwjglVersion")
+            runtimeOnly("org.lwjgl:lwjgl$lwjglVersion", classifier = lwjglNatives)
+            runtimeOnly("org.lwjgl:lwjgl-assimp:$lwjglVersion", classifier = lwjglNatives)
+            runtimeOnly("org.lwjgl:lwjgl-glfw:$lwjglVersion", classifier = lwjglNatives)
+            runtimeOnly("org.lwjgl:lwjgl-openal:$lwjglVersion", classifier = lwjglNatives)
+            runtimeOnly("org.lwjgl:lwjgl-stb:$lwjglVersion", classifier = lwjglNatives)
+            runtimeOnly("org.lwjgl:lwjgl-vma:$lwjglVersion", classifier = lwjglNatives)
+            if (lwjglNatives == "natives-macos") {
+                runtimeOnly("org.lwjgl:lwjgl-vulkan:$lwjglVersion", classifier = lwjglNatives)
+            }
         }
         sourceSets["jvmTest"].dependencies {
             implementation(kotlin("test-junit"))
