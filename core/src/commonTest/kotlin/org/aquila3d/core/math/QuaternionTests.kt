@@ -1,5 +1,6 @@
 package org.aquila3d.core.math
 
+import assertEqualsEpsilon
 import kotlin.math.abs
 import kotlin.test.*
 
@@ -123,10 +124,10 @@ class QuaternionTests {
         // Test 30 degrees about Y, 60 about X, 90 about Z
         val q = Quaternion(Degrees(30.0).toRadians(), Degrees(60.0).toRadians(), Degrees(90.0).toRadians())
         assertNotNull(q)
-        assertTrue(abs(0.6830127018922193 - q.w) <= 1e-12, "q Invalid W component: $q")
-        assertTrue(abs(0.5 - q.x) <= 1e-12, "q Invalid X component: $q")
-        assertTrue(abs(-0.18301270189221924 - q.y) <= 1e-12, "q Invalid Y component: $q")
-        assertTrue(abs(0.5 - q.z) <= 1e-12, "q Invalid Z component: $q")
+        assertEqualsEpsilon(0.6830127018922193, q.w, "q Invalid W component: $q")
+        assertEqualsEpsilon(0.5, q.x, "q Invalid X component: $q")
+        assertEqualsEpsilon(-0.18301270189221924, q.y, "q Invalid Y component: $q")
+        assertEqualsEpsilon(0.5, q.z, "q Invalid Z component: $q")
     }
 
     @Test
