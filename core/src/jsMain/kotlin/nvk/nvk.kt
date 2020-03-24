@@ -2,6 +2,4 @@
 @file:JsNonModule
 package nvk
 
-external class VkBuffer
-
-open external class VulkanWindow
+external class VulkanWindow
