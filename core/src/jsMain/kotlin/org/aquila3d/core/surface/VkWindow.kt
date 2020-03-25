@@ -13,4 +13,14 @@ actual class VkWindow {
         window.asDynamic()["height"] = height
         window.asDynamic()["title"] = title
     }
+
+    actual fun destroy() {
+    }
+
+    actual fun onResized(width: Int, height: Int) {
+    }
+
+    actual fun getRequiredExtensions(): MutableList<String> {
+        TODO("Not yet implemented")
+    }
 }
