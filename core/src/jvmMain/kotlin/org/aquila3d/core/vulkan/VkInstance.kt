@@ -6,9 +6,10 @@ import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkInstanceCreateInfo
 import java.nio.ByteBuffer
 
+//TODO: vulkan allocator
 actual class VkInstance actual constructor(applicationInfo: VkApplicationInfo, requiredExtensions: List<String>, debug: Boolean) {
 
-    val instance: org.lwjgl.vulkan.VkInstance
+    internal val instance: org.lwjgl.vulkan.VkInstance
 
     companion object {
         val layers = listOf<ByteBuffer>(memUTF8("VK_LAYER_LUNARG_standard_validation"))
@@ -39,7 +40,7 @@ actual class VkInstance actual constructor(applicationInfo: VkApplicationInfo, r
         val instancePointer = pInstance.get(0)
         memFree(pInstance)
         if (err != VK_SUCCESS) {
-            throw AssertionError("Failed to create VkInstance: " + translateVulkanResult(err))
+            throw AssertionError("Failed to create VkInstance: " + VkResult(err))
         }
         instance = org.lwjgl.vulkan.VkInstance(instancePointer, pCreateInfo)
         pCreateInfo.free();
@@ -48,5 +49,14 @@ actual class VkInstance actual constructor(applicationInfo: VkApplicationInfo, r
         memFree(ppEnabledExtensionNames)
         memFree(applicationInfo.info.pApplicationName())
         memFree(applicationInfo.info.pEngineName())
+    }
+
+    actual fun destroy() {
+        vkDestroyInstance(instance, null)
+    }
+
+    actual fun getCapabilities(): List<String> {
+        val localCapabilities = instance.capabilities
+        TODO("Not yet implemented")
     }
 }

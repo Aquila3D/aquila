@@ -21,7 +21,6 @@ val lwjglNatives = when (OperatingSystem.current()) {
 
 kotlin {
     js {
-        browser {}
         nodejs {}
     }
     jvm {

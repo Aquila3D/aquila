@@ -8,8 +8,9 @@ import org.lwjgl.vulkan.KHRSwapchain.VK_ERROR_OUT_OF_DATE_KHR
 import org.lwjgl.vulkan.KHRSwapchain.VK_SUBOPTIMAL_KHR
 import org.lwjgl.vulkan.VK10.*
 
-actual fun translateVulkanResult(result: Int): String {
-    return when (result) {
+actual class VkResult actual constructor(code: Int) {
+
+    private val message: String = when (code) {
         VK_SUCCESS -> "Command successfully completed."
         VK_NOT_READY -> "A fence or query has not yet completed."
         VK_TIMEOUT -> "A wait operation has not completed in the specified time."
@@ -33,6 +34,10 @@ actual fun translateVulkanResult(result: Int): String {
         VK_ERROR_OUT_OF_DATE_KHR -> "A surface has changed in such a way that it is no longer compatible with the swapchain, and further presentation requests using the swapchain will fail. Applications must query the new surface properties and recreate their swapchain if they wish to continue" + "presenting to the surface."
         VK_ERROR_INCOMPATIBLE_DISPLAY_KHR -> "The display used by a swapchain does not use the same presentable image layout, or is incompatible in a way that prevents sharing an" + " image."
         VK_ERROR_VALIDATION_FAILED_EXT -> "A validation layer found an error."
-        else -> String.format("%s [%d]", "Unknown", result)
+        else -> String.format("%s [%d]", "Unknown", code)
+    }
+
+    override fun toString(): String {
+        return "VkResult($message)"
     }
 }
