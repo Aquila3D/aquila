@@ -1,33 +1,35 @@
 package org.aquila3d.core.vulkan
 
+import com.toxicbakery.logging.Arbor
 import org.lwjgl.system.MemoryUtil.*
-import org.lwjgl.vulkan.EXTDebugReport.VK_EXT_DEBUG_REPORT_EXTENSION_NAME
+import org.lwjgl.vulkan.EXTDebugUtils.vkCreateDebugUtilsMessengerEXT
+import org.lwjgl.vulkan.EXTDebugUtils.vkDestroyDebugUtilsMessengerEXT
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkInstanceCreateInfo
-import java.nio.ByteBuffer
+
 
 //TODO: vulkan allocator
-actual class VkInstance actual constructor(applicationInfo: VkApplicationInfo, requiredExtensions: List<String>, debug: Boolean) {
+actual class VkInstance actual constructor(
+    applicationInfo: VkApplicationInfo,
+    requiredExtensions: List<String>,
+    layers: List<String>,
+    debugUtilsMessengerCallbackCreateInfo: VkDebugUtilsMessengerCallbackCreateInfo?
+) {
 
     internal val instance: org.lwjgl.vulkan.VkInstance
 
-    companion object {
-        val layers = listOf<ByteBuffer>(memUTF8("VK_LAYER_LUNARG_standard_validation"))
-    }
+    private val debugUtilsCallbackInfo = debugUtilsMessengerCallbackCreateInfo
+    private val debugMessageCallback: Long
 
     init {
-        val ppEnabledExtensionNames = memAllocPointer(requiredExtensions.size + 1)
+        val ppEnabledExtensionNames = memAllocPointer(requiredExtensions.size)
         for (extension in requiredExtensions) {
             ppEnabledExtensionNames.put(memUTF8(extension))
         }
-        val vkExtDebugReportExtension = memUTF8(VK_EXT_DEBUG_REPORT_EXTENSION_NAME)
-        ppEnabledExtensionNames.put(vkExtDebugReportExtension)
         ppEnabledExtensionNames.flip()
         val ppEnabledLayerNames = memAllocPointer(layers.size)
-        if (debug) {
-            for (element in layers) {
-                ppEnabledLayerNames.put(element)
-            }
+        for (element in layers) {
+            ppEnabledLayerNames.put(memUTF8(element))
         }
         ppEnabledLayerNames.flip()
         val pCreateInfo = VkInstanceCreateInfo.calloc()
@@ -35,23 +37,42 @@ actual class VkInstance actual constructor(applicationInfo: VkApplicationInfo, r
             .pApplicationInfo(applicationInfo.info)
             .ppEnabledExtensionNames(ppEnabledExtensionNames)
             .ppEnabledLayerNames(ppEnabledLayerNames)
+
+        debugUtilsMessengerCallbackCreateInfo?.also { pCreateInfo.pNext(debugUtilsMessengerCallbackCreateInfo.dbgCreateInfo.address()) }
         val pInstance = memAllocPointer(1)
-        val err = vkCreateInstance(pCreateInfo, null, pInstance)
+        var err = vkCreateInstance(pCreateInfo, null, pInstance)
         val instancePointer = pInstance.get(0)
         memFree(pInstance)
         if (err != VK_SUCCESS) {
             throw AssertionError("Failed to create VkInstance: " + VkResult(err))
         }
         instance = org.lwjgl.vulkan.VkInstance(instancePointer, pCreateInfo)
-        pCreateInfo.free();
+
+        // Cleanup the native structures
+        pCreateInfo.free()
         memFree(ppEnabledLayerNames)
-        memFree(vkExtDebugReportExtension)
         memFree(ppEnabledExtensionNames)
-        memFree(applicationInfo.info.pApplicationName())
-        memFree(applicationInfo.info.pEngineName())
+
+        if (debugUtilsMessengerCallbackCreateInfo != null) {
+            val lp = memAllocLong(1)
+            err = vkCreateDebugUtilsMessengerEXT(instance, debugUtilsMessengerCallbackCreateInfo.dbgCreateInfo, null, lp)
+            when (err) {
+                VK_SUCCESS -> debugMessageCallback = lp.get(0)
+                VK_ERROR_OUT_OF_HOST_MEMORY -> throw IllegalStateException("CreateDebugReportCallback: out of host memory")
+                else -> throw IllegalStateException("CreateDebugReportCallback: unknown failure")
+            }
+            memFree(lp)
+            debugUtilsMessengerCallbackCreateInfo.dbgCreateInfo.free() // We dont need the create info anymore, so clean it up
+        } else {
+            debugMessageCallback = NULL
+        }
     }
 
     actual fun destroy() {
+        if (debugMessageCallback != NULL) {
+            vkDestroyDebugUtilsMessengerEXT(instance, debugMessageCallback, null)
+        }
+        debugUtilsCallbackInfo?.callback?.function?.free()
         vkDestroyInstance(instance, null)
     }
 
@@ -59,4 +80,5 @@ actual class VkInstance actual constructor(applicationInfo: VkApplicationInfo, r
         val localCapabilities = instance.capabilities
         TODO("Not yet implemented")
     }
+
 }
