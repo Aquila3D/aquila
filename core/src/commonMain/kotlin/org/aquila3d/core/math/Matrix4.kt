@@ -14,13 +14,12 @@ open class Matrix4 {
      * Storing data this way allows us to index easier. values[0][3] represents index 3 shown above while values[3][0]
      * represents index 12.
      */
-    protected val values: Array<Column>
+    protected val values = Array(4) { Column(DoubleArray(4) { 0.0 }) }
 
     /**
      * Creates a new [Matrix4] initialized to the Identity matrix.
      */
     constructor() {
-        values = Array(4) { Column(DoubleArray(4) { 0.0 }) }
         values[0][0] = 1.0
         values[1][1] = 1.0
         values[2][2] = 1.0
@@ -28,7 +27,10 @@ open class Matrix4 {
     }
 
     constructor(other: Matrix4) {
-        values = other.values
+        other.values[0].array.copyInto(values[0].array, 0, 0, 4)
+        other.values[1].array.copyInto(values[1].array, 0, 0, 4)
+        other.values[2].array.copyInto(values[2].array, 0, 0, 4)
+        other.values[3].array.copyInto(values[3].array, 0, 0, 4)
     }
 
     /**
