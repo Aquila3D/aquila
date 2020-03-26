@@ -1,6 +1,7 @@
 package org.aquila3d.core.renderer
 
 import com.toxicbakery.logging.Arbor
+import org.aquila3d.core.device.DeviceSelector
 import org.aquila3d.core.surface.VkWindow
 import org.aquila3d.core.vulkan.*
 
@@ -12,13 +13,15 @@ class Renderer(val impl: RendererImpl, val isDebug: Boolean = true) {
         val DEBUG_LAYERS_STANDARD = listOf("VK_LAYER_KHRONOS_validation")
 
         @Deprecated(message = "This layer was deprecated by Khronos",
-            replaceWith = ReplaceWith("DEBUG_LAYERS_STANDARD", "import Renderer.DEBUG_LAYERS_STANDARD")
+            replaceWith = ReplaceWith("DEBUG_LAYERS_STANDARD",
+                "import org.aquila3d.core.renderer.Renderer.DEBUG_LAYERS_STANDARD")
         )
         val DEBUG_LAYERS_LUNARG_STANDARD = listOf("VK_LAYER_LUNARG_standard_validation")
     }
 
     val window: VkWindow
     val instance: VkInstance
+    val physicalDevice: VkPhysicalDevice
 
     init {
         Arbor.d("Creating window.")
@@ -52,6 +55,11 @@ class Renderer(val impl: RendererImpl, val isDebug: Boolean = true) {
         Arbor.d("\tRequiring Layers: %s", layers)
         val applicationInfo = VkApplicationInfo(makeVulkanVersion(1,1, 0))
         instance = VkInstance(applicationInfo, requiredExtensions, layers, debugUtilsMessengerCreateInfo)
+
+        Arbor.d("Selecting physical device.")
+        physicalDevice = impl.getDeviceSelector().select(instance, listOf(VkQueueFamilies.VK_QUEUE_GRAPHICS))!!
+        Arbor.d("Creating logical device.")
+        impl.createLogicalDevice(physicalDevice, listOf())
     }
 
     fun destroy() {
@@ -68,5 +76,9 @@ class Renderer(val impl: RendererImpl, val isDebug: Boolean = true) {
     interface RendererImpl {
 
         fun configureDebug(requiredExtensions: MutableList<String>): VkDebugUtilsMessengerCallbackCreateInfo
+
+        fun getDeviceSelector(): DeviceSelector
+
+        fun createLogicalDevice(physicalDevice: VkPhysicalDevice, requiredExtensions: List<String>): VkDevice
     }
 }

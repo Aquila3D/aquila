@@ -1,7 +1,10 @@
 package org.aquila3d.core.renderer
 
+import org.aquila3d.core.device.DeviceSelector
+import org.aquila3d.core.device.FirstDeviceSelector
 import org.aquila3d.core.vulkan.VkDebugUtilsMessengerCallback
 import org.aquila3d.core.vulkan.VkDebugUtilsMessengerCallbackCreateInfo
+import org.aquila3d.core.vulkan.VkDevice
 
 open class JvmRendererImpl: Renderer.RendererImpl {
 
@@ -10,7 +13,16 @@ open class JvmRendererImpl: Renderer.RendererImpl {
         return VkDebugUtilsMessengerCallbackCreateInfo(createDebugCallback())
     }
 
-    fun createDebugCallback(): VkDebugUtilsMessengerCallback {
+    override fun getDeviceSelector(): DeviceSelector {
+        return FirstDeviceSelector()
+    }
+
+    override fun createLogicalDevice(requiredExtensions: List<String>): VkDevice {
+        TODO("Not yet implemented")
+    }
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    protected fun createDebugCallback(): VkDebugUtilsMessengerCallback {
         return VkDebugUtilsMessengerCallback()
     }
 }
