@@ -6,5 +6,5 @@ expect class VkWindow(width: Int, height: Int, title: String) {
 
     fun onResized(width: Int, height: Int)
 
-    fun getRequiredExtensions(): MutableList<String>
+    fun getRequiredExtensions(): List<String>
 }
