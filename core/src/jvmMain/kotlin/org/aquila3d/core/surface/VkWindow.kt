@@ -59,7 +59,7 @@ actual class VkWindow actual constructor(width: Int, height: Int, title: String)
         swapchainRecreator.mustRecreate = true*/
     }
 
-    actual fun getRequiredExtensions(): MutableList<String> {
+    actual fun getRequiredExtensions(): List<String> {
         val requiredExtensions = glfwGetRequiredInstanceExtensions()
             ?: throw AssertionError("Failed to find list of required Vulkan extensions")
 

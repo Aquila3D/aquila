@@ -20,7 +20,7 @@ actual class VkWindow {
     actual fun onResized(width: Int, height: Int) {
     }
 
-    actual fun getRequiredExtensions(): MutableList<String> {
+    actual fun getRequiredExtensions(): List<String> {
         TODO("Not yet implemented")
     }
 }
