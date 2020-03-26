@@ -9,4 +9,5 @@ pluginManagement {
 }
 
 include(":core")
-include(":examples")
+include(":exampleJVM")
+include(":exampleNodeJS")
