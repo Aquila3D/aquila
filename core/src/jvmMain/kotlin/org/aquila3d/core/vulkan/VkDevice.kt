@@ -1,0 +1,37 @@
+package org.aquila3d.core.vulkan
+
+import org.lwjgl.system.MemoryUtil.memAllocPointer
+import org.lwjgl.system.MemoryUtil.memFree
+import org.lwjgl.vulkan.VK10.vkDestroyDevice
+import org.lwjgl.vulkan.VK10.vkGetDeviceQueue
+
+actual class VkDevice(
+    internal val device: org.lwjgl.vulkan.VkDevice,
+    physicalDevice: VkPhysicalDevice,
+    queueFamilies: List<VkQueueFamilies>
+) {
+
+    private val commandQueues = mutableMapOf<VkQueueFamilies, VkQueue>()
+
+    init {
+        for (family in queueFamilies) {
+            val pQueue = memAllocPointer(1)
+            vkGetDeviceQueue(
+                device, physicalDevice.getQueueFamilyIndices()[family]
+                    ?: error("No queue for type $family found"), 0, pQueue
+            )
+            val queue = pQueue[0]
+            memFree(pQueue)
+            val commandQueue = org.lwjgl.vulkan.VkQueue(queue, device)
+            commandQueues[family] = VkQueue(commandQueue)
+        }
+    }
+
+    actual fun getCommandQueue(family: VkQueueFamilies): VkQueue? {
+        return commandQueues[family]
+    }
+
+    actual fun destroy() {
+        vkDestroyDevice(device, null)
+    }
+}
