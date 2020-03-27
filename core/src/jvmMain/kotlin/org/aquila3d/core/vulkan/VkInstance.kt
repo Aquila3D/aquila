@@ -90,5 +90,10 @@ actual class VkInstance actual constructor(
 actual fun getRequiredInstanceExtensions(): List<String> {
     val requiredExtensions = glfwGetRequiredInstanceExtensions()
         ?: throw AssertionError("Failed to find list of required Vulkan extensions")
-    return mutableListOf(requiredExtensions.stringUTF8)
+    val list = mutableListOf<String>()
+    for (i in 0 until requiredExtensions.capacity()) {
+        requiredExtensions.position(i)
+        list.add(requiredExtensions.stringUTF8)
+    }
+    return list
 }

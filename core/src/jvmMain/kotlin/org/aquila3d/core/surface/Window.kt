@@ -21,16 +21,6 @@ actual class Window actual constructor(width: Int, height: Int, title: String) {
             throw RuntimeException("Failed to create the GLFW window")
         }
 
-        // Handle canvas resize
-        val windowSizeCallback = object : GLFWWindowSizeCallback() {
-            override fun invoke(window: Long, width: Int, height: Int) {
-                if (width <= 0 || height <= 0) {
-                    return
-                }
-                onResized(width, height)
-            }
-        }
-        glfwSetWindowSizeCallback(window, windowSizeCallback)
         glfwShowWindow(window)
     }
 

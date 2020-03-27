@@ -15,6 +15,7 @@ import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWKeyCallback
 import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.glfw.GLFWVulkan.glfwCreateWindowSurface
+import org.lwjgl.glfw.GLFWWindowSizeCallback
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkDeviceCreateInfo
@@ -52,6 +53,21 @@ open class JvmRendererEngine : RendererEngine {
                 eventListeners.forEach { it.onEvent(InputEvent(EventSource.KEY, eventAction, key)) }
             }
         }
+    }
+
+    // Handle canvas resize
+    private val glfwWindowSizeCallback: GLFWWindowSizeCallback by lazy {
+        val callback = object: GLFWWindowSizeCallback() {
+            override fun invoke(window: Long, width: Int, height: Int) {
+                Arbor.d("Window Resize: [WxH] = [%dx%d]", width, height)
+                if (width <= 0 || height <= 0) {
+                    return
+                }
+                this@JvmRendererEngine.window.onResized(width, height)
+            }
+
+        }
+        return@lazy callback
     }
 
     init {
@@ -149,6 +165,7 @@ open class JvmRendererEngine : RendererEngine {
     override fun onAttachedToWindow(window: Window) {
         this.window = window
         glfwSetKeyCallback(window.window, glfwKeyCallback)
+        glfwSetWindowSizeCallback(window.window, glfwWindowSizeCallback)
     }
 
     override fun registerInputEventListener(listener: InputEventListener) {
