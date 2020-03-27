@@ -17,9 +17,12 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
         val DEBUG_LAYERS_STANDARD = listOf("VK_LAYER_KHRONOS_validation")
 
         @JvmField
-        @Deprecated(message = "This layer was deprecated by Khronos",
-            replaceWith = ReplaceWith("DEBUG_LAYERS_STANDARD",
-                "import org.aquila3d.core.renderer.Renderer.DEBUG_LAYERS_STANDARD")
+        @Deprecated(
+            message = "This layer was deprecated by Khronos",
+            replaceWith = ReplaceWith(
+                "DEBUG_LAYERS_STANDARD",
+                "import org.aquila3d.core.renderer.Renderer.DEBUG_LAYERS_STANDARD"
+            )
         )
         val DEBUG_LAYERS_LUNARG_STANDARD = listOf("VK_LAYER_LUNARG_standard_validation")
     }
@@ -33,6 +36,7 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
 
     private val instance: VkInstance
     private val physicalDevice: VkPhysicalDevice
+    private val logicalDevice: VkDevice
 
     init {
         requiredExtensions.addAll(window.getRequiredExtensions())
@@ -42,13 +46,15 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
         Arbor.d("Creating Vulkan instance.")
         Arbor.d("\tRequiring Extensions: %s", requiredExtensions)
         Arbor.d("\tRequiring Layers: %s", layers)
-        val applicationInfo = VkApplicationInfo(makeVulkanVersion(1,1, 0))
+        val applicationInfo = VkApplicationInfo(makeVulkanVersion(1, 1, 0))
         instance = VkInstance(applicationInfo, requiredExtensions, layers, debugUtilsMessengerCreateInfo)
 
         Arbor.d("Selecting physical device.")
-        physicalDevice = engine.getDeviceSelector().select(instance, listOf(VkQueueFamilies.VK_QUEUE_GRAPHICS))!!
+        physicalDevice = engine.getDeviceSelector().select(instance, engine.getRequiredQueueFamilies())
+            ?: throw IllegalStateException("Failed to find an appropriate physical device.")
         Arbor.d("Creating logical device.")
-        engine.createLogicalDevice(physicalDevice, listOf())
+        logicalDevice = engine.createLogicalDevice(physicalDevice, listOf())
+        Arbor.d("Graphics command queue: %s", logicalDevice.getCommandQueue(VkQueueFamilies.VK_QUEUE_GRAPHICS))
     }
 
     private fun getDebugConfig(): DebugConfig = if (isDebug) {
@@ -73,6 +79,8 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
     fun destroy() {
         Arbor.d("Destroying window.")
         window.destroy()
+        Arbor.d("Destroying logical device.")
+        logicalDevice.destroy()
         Arbor.d("Destroying Vulkan instance.")
         instance.destroy()
     }
@@ -82,6 +90,8 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
         fun configureDebug(requiredExtensions: MutableList<String>): VkDebugUtilsMessengerCallbackCreateInfo
 
         fun getDeviceSelector(): DeviceSelector
+
+        fun getRequiredQueueFamilies(): List<VkQueueFamilies>
 
         fun createLogicalDevice(physicalDevice: VkPhysicalDevice, requiredExtensions: List<String>): VkDevice
     }

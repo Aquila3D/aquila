@@ -70,9 +70,11 @@ actual class VkInstance actual constructor(
 
     actual fun destroy() {
         if (debugMessageCallback != NULL) {
+            Arbor.d("Destroying debug messenger callback.")
             vkDestroyDebugUtilsMessengerEXT(instance, debugMessageCallback, null)
         }
         debugUtilsCallbackInfo?.callback?.function?.free()
+        Arbor.d("Destroying native instance.")
         vkDestroyInstance(instance, null)
     }
 

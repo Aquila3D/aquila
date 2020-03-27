@@ -2,11 +2,17 @@ package org.aquila3d.core.renderer
 
 import org.aquila3d.core.device.DeviceSelector
 import org.aquila3d.core.device.FirstDeviceSelector
-import org.aquila3d.core.vulkan.VkDebugUtilsMessengerCallback
-import org.aquila3d.core.vulkan.VkDebugUtilsMessengerCallbackCreateInfo
-import org.aquila3d.core.vulkan.VkDevice
+import org.aquila3d.core.vulkan.*
+import org.lwjgl.system.MemoryUtil.*
+import org.lwjgl.vulkan.VK10.*
+import org.lwjgl.vulkan.VkDeviceCreateInfo
+import org.lwjgl.vulkan.VkDeviceQueueCreateInfo
+import java.nio.ByteBuffer
 
-open class JvmRendererEngine: Renderer.RendererEngine {
+
+open class JvmRendererEngine : Renderer.RendererEngine {
+
+    private val requiredQueueFamilies = listOf(VkQueueFamilies.VK_QUEUE_GRAPHICS)
 
     override fun configureDebug(requiredExtensions: MutableList<String>): VkDebugUtilsMessengerCallbackCreateInfo {
         requiredExtensions.add(Renderer.VK_EXT_DEBUG_UTILS_EXTENSION_NAME)
@@ -17,8 +23,61 @@ open class JvmRendererEngine: Renderer.RendererEngine {
         return FirstDeviceSelector()
     }
 
-    override fun createLogicalDevice(requiredExtensions: List<String>): VkDevice {
-        TODO("Not yet implemented")
+    override fun getRequiredQueueFamilies(): List<VkQueueFamilies> {
+        return requiredQueueFamilies
+    }
+
+    override fun createLogicalDevice(physicalDevice: VkPhysicalDevice, requiredExtensions: List<String>): VkDevice {
+        // Prepare the command queue creation information
+        val pQueuePriorities = memAllocFloat(1).put(0.0f)
+        pQueuePriorities.flip()
+        val queueCreateInfo =
+            physicalDevice.getQueueFamilyIndices()[VkQueueFamilies.VK_QUEUE_GRAPHICS]?.let {
+                VkDeviceQueueCreateInfo.calloc(1)
+                    .sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
+                    .queueFamilyIndex(it)
+                    .pQueuePriorities(pQueuePriorities)
+            } ?: throw IllegalStateException(
+                "Unable to create logical device due to missing graphics command queue family index. This is a bug " +
+                        "in the used DeviceSelector (${getDeviceSelector()::class.qualifiedName}) as the selected " +
+                        "VkPhysicalDevice does not support a required queue family. If you are using a library " +
+                        "provided DeviceSelector, please report this at https://github.com/Aquila3D/aquila/issues"
+            )
+
+        // Prepare te extension loading information
+        val extensions = memAllocPointer(requiredExtensions.size)
+        val extensionBuffers = mutableListOf<ByteBuffer>()
+        for (extension in requiredExtensions) {
+            val extensionBuffer = memUTF8(extension)
+            extensionBuffers.add(extensionBuffer)
+            extensions.put(extensionBuffer)
+        }
+        extensions.flip()
+
+        val deviceCreateInfo = VkDeviceCreateInfo.calloc()
+            .sType(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO)
+            .pQueueCreateInfos(queueCreateInfo)
+            .ppEnabledExtensionNames(extensions)
+            .ppEnabledLayerNames(null)
+
+        val pDevice = memAllocPointer(1)
+        val err = vkCreateDevice(physicalDevice.device, deviceCreateInfo, null, pDevice)
+        val device = pDevice[0]
+        memFree(pDevice)
+        if (err != VK_SUCCESS) {
+            throw AssertionError("Failed to create device: " + VkResult(err))
+        }
+        val logicalDevice = org.lwjgl.vulkan.VkDevice(device, physicalDevice.device, deviceCreateInfo)
+        val retval = VkDevice(logicalDevice, physicalDevice, getRequiredQueueFamilies())
+
+        // Cleanup the native memory
+        deviceCreateInfo.free()
+        for (buffer in extensionBuffers) {
+            memFree(buffer)
+        }
+        memFree(extensions)
+        memFree(pQueuePriorities)
+        return retval
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
