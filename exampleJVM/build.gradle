@@ -15,6 +15,7 @@ dependencies {
     implementation project(":core")
 
     implementation("com.ToxicBakery.logging:common:${findProperty("arbor_version")}")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${findProperty("kotlin_coroutines_version")}")
 }
 
 compileKotlin {
