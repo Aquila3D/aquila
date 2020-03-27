@@ -18,9 +18,17 @@ interface RendererEngine {
 
     fun createLogicalDevice(physicalDevice: VkPhysicalDevice, requiredExtensions: List<String>): VkDevice
 
-    fun createWindowEventHandler(window: Window)
+    fun onAttachedToWindow(window: Window)
 
     fun registerInputEventListener(listener: InputEventListener)
 
     fun unregisterInputEventListener(listener: InputEventListener)
+
+    fun startRenderLoop()
+
+    fun stopRenderLoop()
+
+    fun resumeRenderLoop()
+
+    fun pauseRenderLoop()
 }

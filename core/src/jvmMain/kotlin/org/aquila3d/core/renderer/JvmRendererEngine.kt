@@ -1,7 +1,12 @@
 package org.aquila3d.core.renderer
 
+import com.toxicbakery.logging.Arbor
+import kotlinx.coroutines.*
 import org.aquila3d.core.device.DeviceSelector
 import org.aquila3d.core.device.FirstDeviceSelector
+import org.aquila3d.core.input.Event
+import org.aquila3d.core.input.EventSource
+import org.aquila3d.core.input.InputEvent
 import org.aquila3d.core.input.InputEventListener
 import org.aquila3d.core.surface.Window
 import org.aquila3d.core.vulkan.*
@@ -14,6 +19,7 @@ import org.lwjgl.vulkan.VkDeviceCreateInfo
 import org.lwjgl.vulkan.VkDeviceQueueCreateInfo
 import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
 
 
 open class JvmRendererEngine : RendererEngine {
@@ -22,11 +28,24 @@ open class JvmRendererEngine : RendererEngine {
 
     private val eventListeners: MutableSet<InputEventListener> = ConcurrentHashMap.newKeySet()
 
+    private val renderThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+
+    @Volatile
+    private var shouldRender = false
+
+    private lateinit var window: Window
+
     private val glfwKeyCallback: GLFWKeyCallback by lazy {
-        object: GLFWKeyCallback() {
+        object : GLFWKeyCallback() {
             override fun invoke(window: Long, key: Int, scancode: Int, action: Int, mods: Int) {
-                if (action != GLFW_RELEASE) return
-                if (key == GLFW_KEY_ESCAPE) glfwSetWindowShouldClose(window, true)
+                val eventAction = when (action) {
+                    GLFW_RELEASE -> Event.UP
+                    GLFW_KEY_DOWN -> Event.DOWN
+                    GLFW_REPEAT -> Event.REPEAT
+                    else -> Event.OTHER
+                }
+                Arbor.d("Key press detected from GLFW: %d", key)
+                eventListeners.forEach { it.onEvent(InputEvent(EventSource.KEY, eventAction, key)) }
             }
         }
     }
@@ -106,7 +125,8 @@ open class JvmRendererEngine : RendererEngine {
         return retval
     }
 
-    override fun createWindowEventHandler(window: Window) {
+    override fun onAttachedToWindow(window: Window) {
+        this.window = window
         glfwSetKeyCallback(window.window, glfwKeyCallback)
     }
 
@@ -118,8 +138,42 @@ open class JvmRendererEngine : RendererEngine {
         eventListeners.remove(listener)
     }
 
+    override fun startRenderLoop() {
+        runBlocking {
+            async { render() }
+            while (!glfwWindowShouldClose(window.window)) {
+                // Handle window messages. Resize events happen exactly here.
+                // So it is safe to use the new swapchain images and framebuffers afterwards.
+                glfwPollEvents()
+                delay(16) // 60 Hz, this is temporary for now
+            }
+            stopRenderLoop()
+        }
+    }
+
+    override fun stopRenderLoop() {
+        shouldRender = false
+    }
+
+    override fun resumeRenderLoop() {
+        shouldRender = true
+    }
+
+    override fun pauseRenderLoop() {
+        shouldRender = false
+    }
+
     @Suppress("MemberVisibilityCanBePrivate")
     protected fun createDebugCallback(): VkDebugUtilsMessengerCallback {
         return VkDebugUtilsMessengerCallback()
+    }
+
+    protected suspend fun render() = withContext(renderThread) {
+        shouldRender = true
+        while (shouldRender) {
+            //Arbor.v("Rendering frame...")
+            delay(16) // 60 Hz, this is temporary for now
+            // TODO: Real frame rate determination, including render when dirty
+        }
     }
 }

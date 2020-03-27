@@ -29,7 +29,7 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
     private val window: Window by lazy {
         Arbor.d("Creating window.")
         val window = Window(800, 600, "Hello, Vulkan JVM")
-        engine.createWindowEventHandler(window)
+        engine.onAttachedToWindow(window)
         return@lazy window
     }
 
@@ -76,6 +76,22 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
             }
         }
     } else mutableListOf<String>() to null
+
+    fun start() {
+        engine.startRenderLoop()
+    }
+
+    fun stop() {
+        engine.stopRenderLoop()
+    }
+
+    fun resume() {
+        engine.resumeRenderLoop()
+    }
+
+    fun pause() {
+        engine.pauseRenderLoop()
+    }
 
     fun destroy() {
         Arbor.d("Destroying window.")

@@ -5,7 +5,7 @@ enum class EventSource {
 }
 
 enum class Event {
-    DOWN, UP, REPEAT, MOVE
+    DOWN, UP, REPEAT, MOVE, OTHER
 }
 
 data class InputEvent(val source: EventSource, val event: Event, val eventData: Any) {}

@@ -14,7 +14,7 @@ fun main() {
         }
     })
     val renderer = Renderer(engine)
+    renderer.start()
 
-    Thread.sleep(5000)
     renderer.destroy()
 }
