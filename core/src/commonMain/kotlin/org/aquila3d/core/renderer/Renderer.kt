@@ -55,10 +55,10 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
         surface = engine.createSurface(instance, window)
 
         Arbor.d("Selecting physical device.")
-        physicalDevice = engine.getDeviceSelector().select(surface, engine.requiredQueueFamilies())
+        physicalDevice = engine.getDeviceSelector().select(surface, engine.requiredQueueFamilies(), engine.requiredDeviceExtensions())
             ?: throw IllegalStateException("Failed to find an appropriate physical device.")
-        Arbor.d("Creating logical device.")
-        logicalDevice = engine.createLogicalDevice(physicalDevice, listOf())
+        Arbor.d("Creating logical device with extensions: %s", engine.requiredDeviceExtensions())
+        logicalDevice = engine.createLogicalDevice(physicalDevice, engine.requiredDeviceExtensions())
         Arbor.d("Graphics command queue: %s", logicalDevice.getCommandQueue(VkQueueFamilies.VK_QUEUE_GRAPHICS))
     }
 

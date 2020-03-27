@@ -17,6 +17,7 @@ import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.glfw.GLFWVulkan.glfwCreateWindowSurface
 import org.lwjgl.glfw.GLFWWindowSizeCallback
 import org.lwjgl.system.MemoryUtil.*
+import org.lwjgl.vulkan.KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkDeviceCreateInfo
 import org.lwjgl.vulkan.VkDeviceQueueCreateInfo
@@ -31,9 +32,11 @@ open class JvmRendererEngine : RendererEngine {
 
     private val renderThread = Executors.newSingleThreadExecutor { Thread(it, "AquilaVK-Render-Thread") }
 
+    private val deviceExtensions = listOf(VK_KHR_SWAPCHAIN_EXTENSION_NAME)
+
     private val requiredQueueFamilies = listOf(VkQueueFamilies.VK_QUEUE_GRAPHICS, VkQueueFamilies.VK_QUEUE_PRESENTATION)
 
-    private val instanceExtensions: List<String> // Can't initialize this here because it must be after GLFW is initialized
+    private val instanceExtensions: MutableList<String> // Can't initialize this here because it must be after GLFW is initialized
 
     @Volatile
     private var shouldRender = false
@@ -83,6 +86,10 @@ open class JvmRendererEngine : RendererEngine {
 
     override fun requiredInstanceExtensions(): List<String> {
         return instanceExtensions
+    }
+
+    override fun requiredDeviceExtensions(): List<String> {
+        return deviceExtensions
     }
 
     override fun requiredQueueFamilies(): List<VkQueueFamilies> {

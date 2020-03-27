@@ -7,6 +7,7 @@ import org.lwjgl.system.MemoryUtil.memFree
 import org.lwjgl.vulkan.KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VK11
+import org.lwjgl.vulkan.VkExtensionProperties
 import org.lwjgl.vulkan.VkQueueFamilyProperties
 
 
@@ -55,7 +56,32 @@ actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDe
         return@lazy queueFamilies
     }
 
+    private val extensions: Map<String, Int> by lazy {
+        val extensionCountPointer = memAllocInt(1)
+        var err = vkEnumerateDeviceExtensionProperties(device, null as String?, extensionCountPointer, null)
+        if (err != VK_SUCCESS) {
+            throw AssertionError("Failed to get number of physical device extensions: " + VkResult(err))
+        }
+        val extensionCount = extensionCountPointer.get(0)
+        val extensionsPointer = VkExtensionProperties.calloc(extensionCount)
+        err = vkEnumerateDeviceExtensionProperties(device, null as String?, extensionCountPointer, extensionsPointer)
+        memFree(extensionCountPointer)
+        if (err != VK_SUCCESS) {
+            throw AssertionError("Failed to get physical device extensions: " + VkResult(err))
+        }
+        val extensions = mutableMapOf<String, Int>()
+        for (index in 0 until extensionCount) {
+            extensionsPointer.position(index)
+            extensions.put(extensionsPointer.extensionNameString(), extensionsPointer.specVersion())
+        }
+        return@lazy extensions
+    }
+
     actual fun getQueueFamilyIndices(): Map<VkQueueFamilies, Int> {
         return queueFamilies
+    }
+
+    actual fun getDeviceExtensions(): Map<String, Int> {
+        return extensions
     }
 }

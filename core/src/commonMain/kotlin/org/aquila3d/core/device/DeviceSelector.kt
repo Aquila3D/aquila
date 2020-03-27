@@ -7,5 +7,9 @@ import org.aquila3d.core.vulkan.VkQueueFamilies
 
 interface DeviceSelector {
 
-    fun select(surface: Surface, requiredQueueFamilies: List<VkQueueFamilies>): VkPhysicalDevice?
+    fun select(
+        surface: Surface,
+        requiredQueueFamilies: List<VkQueueFamilies>,
+        requiredDeviceExtensions: List<String>
+    ): VkPhysicalDevice?
 }

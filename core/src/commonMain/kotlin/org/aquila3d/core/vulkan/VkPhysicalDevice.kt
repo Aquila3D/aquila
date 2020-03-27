@@ -1,7 +1,5 @@
 package org.aquila3d.core.vulkan
 
-import org.aquila3d.core.surface.Surface
-
 enum class VkQueueFamilies {
     VK_QUEUE_GRAPHICS,
     VK_QUEUE_COMPUTE,
@@ -13,4 +11,5 @@ enum class VkQueueFamilies {
 
 expect class VkPhysicalDevice {
     fun getQueueFamilyIndices(): Map<VkQueueFamilies, Int>
+    fun getDeviceExtensions(): Map<String, Int>
 }

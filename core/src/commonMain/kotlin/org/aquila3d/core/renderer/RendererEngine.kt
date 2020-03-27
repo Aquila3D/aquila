@@ -10,6 +10,8 @@ interface RendererEngine {
 
     fun requiredInstanceExtensions(): List<String>
 
+    fun requiredDeviceExtensions(): List<String>
+
     fun requiredQueueFamilies(): List<VkQueueFamilies>
 
     fun configureDebug(requiredExtensions: MutableList<String>): VkDebugUtilsMessengerCallbackCreateInfo
