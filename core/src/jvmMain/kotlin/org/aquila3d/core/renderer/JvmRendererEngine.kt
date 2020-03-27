@@ -28,7 +28,7 @@ open class JvmRendererEngine : RendererEngine {
 
     private val eventListeners: MutableSet<InputEventListener> = ConcurrentHashMap.newKeySet()
 
-    private val renderThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+    private val renderThread = Executors.newSingleThreadExecutor { Thread(it, "AquilaVK-Render-Thread") }
 
     @Volatile
     private var shouldRender = false
@@ -148,11 +148,13 @@ open class JvmRendererEngine : RendererEngine {
                 delay(16) // 60 Hz, this is temporary for now
             }
             stopRenderLoop()
+
         }
     }
 
     override fun stopRenderLoop() {
         shouldRender = false
+        renderThread.shutdownNow()
     }
 
     override fun resumeRenderLoop() {
@@ -168,10 +170,9 @@ open class JvmRendererEngine : RendererEngine {
         return VkDebugUtilsMessengerCallback()
     }
 
-    protected suspend fun render() = withContext(renderThread) {
+    protected suspend fun render() = withContext(renderThread.asCoroutineDispatcher()) {
         shouldRender = true
         while (shouldRender) {
-            //Arbor.v("Rendering frame...")
             delay(16) // 60 Hz, this is temporary for now
             // TODO: Real frame rate determination, including render when dirty
         }

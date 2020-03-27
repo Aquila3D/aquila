@@ -15,6 +15,6 @@ fun main() {
     })
     val renderer = Renderer(engine)
     renderer.start()
-
     renderer.destroy()
+    Arbor.d("Terminating...")
 }

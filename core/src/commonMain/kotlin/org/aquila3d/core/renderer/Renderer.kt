@@ -94,6 +94,8 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
     }
 
     fun destroy() {
+        Arbor.d("Stopping render loop.")
+        engine.stopRenderLoop()
         Arbor.d("Destroying window.")
         window.destroy()
         Arbor.d("Destroying logical device.")
