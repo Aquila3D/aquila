@@ -3,7 +3,7 @@ package org.aquila3d.core.surface
 import nvk.VulkanWindow
 import org.aquila3d.core.createInstance
 
-actual class VkWindow {
+actual class Window {
 
     val window: VulkanWindow
 

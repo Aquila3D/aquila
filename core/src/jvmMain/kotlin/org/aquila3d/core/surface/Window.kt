@@ -1,28 +1,16 @@
 package org.aquila3d.core.surface
 
-import org.aquila3d.core.vulkan.VkResult
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWVulkan.glfwGetRequiredInstanceExtensions
 import org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported
 import org.lwjgl.glfw.GLFWWindowSizeCallback
-import org.lwjgl.vulkan.VK10.*
-import org.lwjgl.vulkan.VkExtensionProperties
-import java.nio.ByteBuffer
-import java.nio.IntBuffer
 
 
-actual class VkWindow actual constructor(width: Int, height: Int, title: String) {
+actual class Window actual constructor(width: Int, height: Int, title: String) {
 
-    private val window: Long
+    internal val window: Long
 
     init {
-        if (!glfwInit()) {
-            throw RuntimeException("Failed to initialize GLFW")
-        }
-        if (!glfwVulkanSupported()) {
-            throw AssertionError("GLFW failed to find the Vulkan loader")
-        }
-
         // Configure GLFW
         glfwDefaultWindowHints() // optional, the current window hints are already the default
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)

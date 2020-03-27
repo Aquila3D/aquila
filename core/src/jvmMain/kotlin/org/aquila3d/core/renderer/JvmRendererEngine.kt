@@ -2,17 +2,43 @@ package org.aquila3d.core.renderer
 
 import org.aquila3d.core.device.DeviceSelector
 import org.aquila3d.core.device.FirstDeviceSelector
+import org.aquila3d.core.input.InputEventListener
+import org.aquila3d.core.surface.Window
 import org.aquila3d.core.vulkan.*
+import org.lwjgl.glfw.GLFW.*
+import org.lwjgl.glfw.GLFWKeyCallback
+import org.lwjgl.glfw.GLFWVulkan
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkDeviceCreateInfo
 import org.lwjgl.vulkan.VkDeviceQueueCreateInfo
 import java.nio.ByteBuffer
+import java.util.concurrent.ConcurrentHashMap
 
 
-open class JvmRendererEngine : Renderer.RendererEngine {
+open class JvmRendererEngine : RendererEngine {
 
     private val requiredQueueFamilies = listOf(VkQueueFamilies.VK_QUEUE_GRAPHICS)
+
+    private val eventListeners: MutableSet<InputEventListener> = ConcurrentHashMap.newKeySet()
+
+    private val glfwKeyCallback: GLFWKeyCallback by lazy {
+        object: GLFWKeyCallback() {
+            override fun invoke(window: Long, key: Int, scancode: Int, action: Int, mods: Int) {
+                if (action != GLFW_RELEASE) return
+                if (key == GLFW_KEY_ESCAPE) glfwSetWindowShouldClose(window, true)
+            }
+        }
+    }
+
+    init {
+        if (!glfwInit()) {
+            throw RuntimeException("Failed to initialize GLFW")
+        }
+        if (!GLFWVulkan.glfwVulkanSupported()) {
+            throw AssertionError("GLFW failed to find the Vulkan loader")
+        }
+    }
 
     override fun configureDebug(requiredExtensions: MutableList<String>): VkDebugUtilsMessengerCallbackCreateInfo {
         requiredExtensions.add(Renderer.VK_EXT_DEBUG_UTILS_EXTENSION_NAME)
@@ -78,6 +104,18 @@ open class JvmRendererEngine : Renderer.RendererEngine {
         memFree(extensions)
         memFree(pQueuePriorities)
         return retval
+    }
+
+    override fun createWindowEventHandler(window: Window) {
+        glfwSetKeyCallback(window.window, glfwKeyCallback)
+    }
+
+    override fun registerInputEventListener(listener: InputEventListener) {
+        eventListeners.add(listener)
+    }
+
+    override fun unregisterInputEventListener(listener: InputEventListener) {
+        eventListeners.remove(listener)
     }
 
     @Suppress("MemberVisibilityCanBePrivate")

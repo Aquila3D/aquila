@@ -1,8 +1,7 @@
 package org.aquila3d.core.renderer
 
 import com.toxicbakery.logging.Arbor
-import org.aquila3d.core.device.DeviceSelector
-import org.aquila3d.core.surface.VkWindow
+import org.aquila3d.core.surface.Window
 import org.aquila3d.core.vulkan.*
 import kotlin.jvm.JvmField
 
@@ -27,9 +26,11 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
         val DEBUG_LAYERS_LUNARG_STANDARD = listOf("VK_LAYER_LUNARG_standard_validation")
     }
 
-    private val window: VkWindow by lazy {
+    private val window: Window by lazy {
         Arbor.d("Creating window.")
-        VkWindow(800, 600, "Hello, Vulkan JVM")
+        val window = Window(800, 600, "Hello, Vulkan JVM")
+        engine.createWindowEventHandler(window)
+        return@lazy window
     }
 
     private val requiredExtensions = mutableListOf<String>()
@@ -85,14 +86,4 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
         instance.destroy()
     }
 
-    interface RendererEngine {
-
-        fun configureDebug(requiredExtensions: MutableList<String>): VkDebugUtilsMessengerCallbackCreateInfo
-
-        fun getDeviceSelector(): DeviceSelector
-
-        fun getRequiredQueueFamilies(): List<VkQueueFamilies>
-
-        fun createLogicalDevice(physicalDevice: VkPhysicalDevice, requiredExtensions: List<String>): VkDevice
-    }
 }
