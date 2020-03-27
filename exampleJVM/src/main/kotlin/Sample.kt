@@ -13,8 +13,12 @@ fun main() {
             Arbor.d("Received input event: $event")
         }
     })
-    val renderer = Renderer(engine)
-    renderer.start()
-    renderer.destroy()
+    try {
+        val renderer = Renderer(engine)
+        renderer.start()
+        renderer.destroy()
+    } catch (e: Throwable) {
+        Arbor.e(e, "Caught exception from renderer.")
+    }
     Arbor.d("Terminating...")
 }

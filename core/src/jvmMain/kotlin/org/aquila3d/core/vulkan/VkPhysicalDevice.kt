@@ -1,20 +1,27 @@
 package org.aquila3d.core.vulkan
 
+import com.toxicbakery.logging.Arbor
+import org.aquila3d.core.surface.Surface
 import org.lwjgl.system.MemoryUtil.memAllocInt
 import org.lwjgl.system.MemoryUtil.memFree
+import org.lwjgl.vulkan.KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VK11
+import org.lwjgl.vulkan.VkExtensionProperties
 import org.lwjgl.vulkan.VkQueueFamilyProperties
 
-actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDevice) {
-    actual fun getQueueFamilyIndices(): Map<VkQueueFamilies, Int> {
-        val pQueueFamilyPropertyCount = memAllocInt(1)
-        vkGetPhysicalDeviceQueueFamilyProperties(device, pQueueFamilyPropertyCount, null)
-        val queueCount = pQueueFamilyPropertyCount.get(0)
+
+actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDevice, private val surface: Surface) {
+
+    private val queueFamilies: Map<VkQueueFamilies, Int> by lazy {
+        val queueCountPointer = memAllocInt(1)
+        vkGetPhysicalDeviceQueueFamilyProperties(device, queueCountPointer, null)
+        val queueCount = queueCountPointer.get(0)
         val queueProps = VkQueueFamilyProperties.calloc(queueCount)
-        vkGetPhysicalDeviceQueueFamilyProperties(device, pQueueFamilyPropertyCount, queueProps)
-        memFree(pQueueFamilyPropertyCount)
+        vkGetPhysicalDeviceQueueFamilyProperties(device, queueCountPointer, queueProps)
+        memFree(queueCountPointer)
         val queueFamilies = mutableMapOf<VkQueueFamilies, Int>()
+        val supportsPresent = memAllocInt(1)
         for (index in 0 until queueCount) {
             val flags = queueProps.get(index).queueFlags()
             when {
@@ -34,8 +41,47 @@ actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDe
                     queueFamilies[VkQueueFamilies.VK_QUEUE_PROTECTED] = index
                 }
             }
+            supportsPresent.position(0)
+            val err = vkGetPhysicalDeviceSurfaceSupportKHR(device, index, surface.surfaceHandle, supportsPresent)
+            if (err != VK_SUCCESS) {
+                Arbor.e("Failed to physical device surface support: %s", VkResult(err))
+            } else {
+                if (supportsPresent.get(0) == VK_TRUE) {
+                    queueFamilies[VkQueueFamilies.VK_QUEUE_PRESENTATION] = index
+                }
+            }
         }
+        memFree(supportsPresent)
         queueProps.free()
+        return@lazy queueFamilies
+    }
+
+    private val extensions: Map<String, Int> by lazy {
+        val extensionCountPointer = memAllocInt(1)
+        var err = vkEnumerateDeviceExtensionProperties(device, null as String?, extensionCountPointer, null)
+        if (err != VK_SUCCESS) {
+            throw AssertionError("Failed to get number of physical device extensions: " + VkResult(err))
+        }
+        val extensionCount = extensionCountPointer.get(0)
+        val extensionsPointer = VkExtensionProperties.calloc(extensionCount)
+        err = vkEnumerateDeviceExtensionProperties(device, null as String?, extensionCountPointer, extensionsPointer)
+        memFree(extensionCountPointer)
+        if (err != VK_SUCCESS) {
+            throw AssertionError("Failed to get physical device extensions: " + VkResult(err))
+        }
+        val extensions = mutableMapOf<String, Int>()
+        for (index in 0 until extensionCount) {
+            extensionsPointer.position(index)
+            extensions.put(extensionsPointer.extensionNameString(), extensionsPointer.specVersion())
+        }
+        return@lazy extensions
+    }
+
+    actual fun getQueueFamilyIndices(): Map<VkQueueFamilies, Int> {
         return queueFamilies
+    }
+
+    actual fun getDeviceExtensions(): Map<String, Int> {
+        return extensions
     }
 }

@@ -1,9 +1,6 @@
 package org.aquila3d.core.surface
 
 import org.lwjgl.glfw.GLFW.*
-import org.lwjgl.glfw.GLFWVulkan.glfwGetRequiredInstanceExtensions
-import org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported
-import org.lwjgl.glfw.GLFWWindowSizeCallback
 
 
 actual class Window actual constructor(width: Int, height: Int, title: String) {
@@ -23,16 +20,6 @@ actual class Window actual constructor(width: Int, height: Int, title: String) {
             throw RuntimeException("Failed to create the GLFW window")
         }
 
-        // Handle canvas resize
-        val windowSizeCallback = object : GLFWWindowSizeCallback() {
-            override fun invoke(window: Long, width: Int, height: Int) {
-                if (width <= 0 || height <= 0) {
-                    return
-                }
-                onResized(width, height)
-            }
-        }
-        glfwSetWindowSizeCallback(window, windowSizeCallback)
         glfwShowWindow(window)
     }
 
@@ -45,12 +32,5 @@ actual class Window actual constructor(width: Int, height: Int, title: String) {
         /*TriangleDemo.width = width
         TriangleDemo.height = height
         swapchainRecreator.mustRecreate = true*/
-    }
-
-    actual fun getRequiredExtensions(): List<String> {
-        val requiredExtensions = glfwGetRequiredInstanceExtensions()
-            ?: throw AssertionError("Failed to find list of required Vulkan extensions")
-
-        return mutableListOf(requiredExtensions.stringUTF8)
     }
 }

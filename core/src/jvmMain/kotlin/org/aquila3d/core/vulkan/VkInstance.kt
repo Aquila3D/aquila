@@ -1,6 +1,7 @@
 package org.aquila3d.core.vulkan
 
 import com.toxicbakery.logging.Arbor
+import org.lwjgl.glfw.GLFWVulkan.glfwGetRequiredInstanceExtensions
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.EXTDebugUtils.vkCreateDebugUtilsMessengerEXT
 import org.lwjgl.vulkan.EXTDebugUtils.vkDestroyDebugUtilsMessengerEXT
@@ -22,6 +23,7 @@ actual class VkInstance actual constructor(
     private val debugMessageCallback: Long
 
     init {
+        Arbor.d("Creating instance with extensions: %s", requiredExtensions)
         val ppEnabledExtensionNames = memAllocPointer(requiredExtensions.size)
         for (extension in requiredExtensions) {
             ppEnabledExtensionNames.put(memUTF8(extension))
@@ -83,4 +85,15 @@ actual class VkInstance actual constructor(
         TODO("Not yet implemented")
     }
 
+}
+
+internal actual fun getRequiredInstanceExtensions(): MutableList<String> {
+    val requiredExtensions = glfwGetRequiredInstanceExtensions()
+        ?: throw AssertionError("Failed to find list of required Vulkan extensions")
+    val list = mutableListOf<String>()
+    for (i in 0 until requiredExtensions.capacity()) {
+        requiredExtensions.position(i)
+        list.add(requiredExtensions.stringUTF8)
+    }
+    return list
 }

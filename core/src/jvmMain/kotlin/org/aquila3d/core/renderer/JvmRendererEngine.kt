@@ -8,12 +8,16 @@ import org.aquila3d.core.input.Event
 import org.aquila3d.core.input.EventSource
 import org.aquila3d.core.input.InputEvent
 import org.aquila3d.core.input.InputEventListener
+import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.surface.Window
 import org.aquila3d.core.vulkan.*
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWKeyCallback
 import org.lwjgl.glfw.GLFWVulkan
+import org.lwjgl.glfw.GLFWVulkan.glfwCreateWindowSurface
+import org.lwjgl.glfw.GLFWWindowSizeCallback
 import org.lwjgl.system.MemoryUtil.*
+import org.lwjgl.vulkan.KHRSwapchain.VK_KHR_SWAPCHAIN_EXTENSION_NAME
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkDeviceCreateInfo
 import org.lwjgl.vulkan.VkDeviceQueueCreateInfo
@@ -24,11 +28,15 @@ import java.util.concurrent.Executors
 
 open class JvmRendererEngine : RendererEngine {
 
-    private val requiredQueueFamilies = listOf(VkQueueFamilies.VK_QUEUE_GRAPHICS)
-
     private val eventListeners: MutableSet<InputEventListener> = ConcurrentHashMap.newKeySet()
 
     private val renderThread = Executors.newSingleThreadExecutor { Thread(it, "AquilaVK-Render-Thread") }
+
+    private val deviceExtensions = listOf(VK_KHR_SWAPCHAIN_EXTENSION_NAME)
+
+    private val requiredQueueFamilies = listOf(VkQueueFamilies.VK_QUEUE_GRAPHICS, VkQueueFamilies.VK_QUEUE_PRESENTATION)
+
+    private val instanceExtensions: MutableList<String> // Can't initialize this here because it must be after GLFW is initialized
 
     @Volatile
     private var shouldRender = false
@@ -50,6 +58,21 @@ open class JvmRendererEngine : RendererEngine {
         }
     }
 
+    // Handle canvas resize
+    private val glfwWindowSizeCallback: GLFWWindowSizeCallback by lazy {
+        val callback = object : GLFWWindowSizeCallback() {
+            override fun invoke(window: Long, width: Int, height: Int) {
+                Arbor.d("Window Resize: [WxH] = [%dx%d]", width, height)
+                if (width <= 0 || height <= 0) {
+                    return
+                }
+                this@JvmRendererEngine.window.onResized(width, height)
+            }
+
+        }
+        return@lazy callback
+    }
+
     init {
         if (!glfwInit()) {
             throw RuntimeException("Failed to initialize GLFW")
@@ -57,6 +80,20 @@ open class JvmRendererEngine : RendererEngine {
         if (!GLFWVulkan.glfwVulkanSupported()) {
             throw AssertionError("GLFW failed to find the Vulkan loader")
         }
+        Arbor.d("GLFW Initialized.")
+        instanceExtensions = getRequiredInstanceExtensions()
+    }
+
+    override fun requiredInstanceExtensions(): List<String> {
+        return instanceExtensions
+    }
+
+    override fun requiredDeviceExtensions(): List<String> {
+        return deviceExtensions
+    }
+
+    override fun requiredQueueFamilies(): List<VkQueueFamilies> {
+        return requiredQueueFamilies
     }
 
     override fun configureDebug(requiredExtensions: MutableList<String>): VkDebugUtilsMessengerCallbackCreateInfo {
@@ -68,26 +105,43 @@ open class JvmRendererEngine : RendererEngine {
         return FirstDeviceSelector()
     }
 
-    override fun getRequiredQueueFamilies(): List<VkQueueFamilies> {
-        return requiredQueueFamilies
+    override fun createSurface(instance: VkInstance, window: Window): Surface {
+        val pSurface = memAllocLong(1)
+        val err = glfwCreateWindowSurface(instance.instance, window.window, null, pSurface)
+        val surface = pSurface[0]
+        memFree(pSurface) // Cleanup the native memory
+        if (err != VK_SUCCESS) {
+            throw AssertionError("Failed to create surface: ${VkResult(err)}")
+        }
+        return Surface(instance, surface)
     }
 
     override fun createLogicalDevice(physicalDevice: VkPhysicalDevice, requiredExtensions: List<String>): VkDevice {
         // Prepare the command queue creation information
-        val pQueuePriorities = memAllocFloat(1).put(0.0f)
+        val pQueuePriorities = memAllocFloat(2).put(1.0f)
         pQueuePriorities.flip()
-        val queueCreateInfo =
-            physicalDevice.getQueueFamilyIndices()[VkQueueFamilies.VK_QUEUE_GRAPHICS]?.let {
-                VkDeviceQueueCreateInfo.calloc(1)
-                    .sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
-                    .queueFamilyIndex(it)
-                    .pQueuePriorities(pQueuePriorities)
-            } ?: throw IllegalStateException(
-                "Unable to create logical device due to missing graphics command queue family index. This is a bug " +
-                        "in the used DeviceSelector (${getDeviceSelector()::class.qualifiedName}) as the selected " +
-                        "VkPhysicalDevice does not support a required queue family. If you are using a library " +
-                        "provided DeviceSelector, please report this at https://github.com/Aquila3D/aquila/issues"
-            )
+        val queueCreateInfo = VkDeviceQueueCreateInfo.calloc(2)
+
+        physicalDevice.getQueueFamilyIndices()[VkQueueFamilies.VK_QUEUE_GRAPHICS]?.let {
+            queueCreateInfo[0].sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
+                .queueFamilyIndex(it)
+                .pQueuePriorities(pQueuePriorities)
+        } ?: throw IllegalStateException(
+            "Unable to create logical device due to missing graphics command queue family index. This is a bug " +
+                    "in the used DeviceSelector (${getDeviceSelector()::class.qualifiedName}) as the selected " +
+                    "VkPhysicalDevice does not support a required queue family. If you are using a library " +
+                    "provided DeviceSelector, please report this at https://github.com/Aquila3D/aquila/issues"
+        )
+        physicalDevice.getQueueFamilyIndices()[VkQueueFamilies.VK_QUEUE_PRESENTATION]?.let {
+            queueCreateInfo[1].sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
+                .queueFamilyIndex(it)
+                .pQueuePriorities(pQueuePriorities)
+        } ?: throw IllegalStateException(
+            "Unable to create logical device due to missing presentation command queue family index. This is a bug " +
+                    "in the used DeviceSelector (${getDeviceSelector()::class.qualifiedName}) as the selected " +
+                    "VkPhysicalDevice does not support a required queue family. If you are using a library " +
+                    "provided DeviceSelector, please report this at https://github.com/Aquila3D/aquila/issues"
+        )
 
         // Prepare te extension loading information
         val extensions = memAllocPointer(requiredExtensions.size)
@@ -113,7 +167,7 @@ open class JvmRendererEngine : RendererEngine {
             throw AssertionError("Failed to create device: " + VkResult(err))
         }
         val logicalDevice = org.lwjgl.vulkan.VkDevice(device, physicalDevice.device, deviceCreateInfo)
-        val retval = VkDevice(logicalDevice, physicalDevice, getRequiredQueueFamilies())
+        val retval = VkDevice(logicalDevice, physicalDevice, requiredQueueFamilies())
 
         // Cleanup the native memory
         deviceCreateInfo.free()
@@ -128,6 +182,7 @@ open class JvmRendererEngine : RendererEngine {
     override fun onAttachedToWindow(window: Window) {
         this.window = window
         glfwSetKeyCallback(window.window, glfwKeyCallback)
+        glfwSetWindowSizeCallback(window.window, glfwWindowSizeCallback)
     }
 
     override fun registerInputEventListener(listener: InputEventListener) {
@@ -170,7 +225,7 @@ open class JvmRendererEngine : RendererEngine {
         return VkDebugUtilsMessengerCallback()
     }
 
-    protected suspend fun render() = withContext(renderThread.asCoroutineDispatcher()) {
+    private suspend fun render() = withContext(renderThread.asCoroutineDispatcher()) {
         shouldRender = true
         while (shouldRender) {
             delay(16) // 60 Hz, this is temporary for now

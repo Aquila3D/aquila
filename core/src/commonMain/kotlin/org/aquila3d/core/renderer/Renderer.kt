@@ -1,6 +1,7 @@
 package org.aquila3d.core.renderer
 
 import com.toxicbakery.logging.Arbor
+import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.surface.Window
 import org.aquila3d.core.vulkan.*
 import kotlin.jvm.JvmField
@@ -33,28 +34,31 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
         return@lazy window
     }
 
-    private val requiredExtensions = mutableListOf<String>()
+    private val requiredInstanceExtensions = mutableListOf<String>()
 
     private val instance: VkInstance
+    private val surface: Surface
     private val physicalDevice: VkPhysicalDevice
     private val logicalDevice: VkDevice
 
     init {
-        requiredExtensions.addAll(window.getRequiredExtensions())
+        requiredInstanceExtensions.addAll(engine.requiredInstanceExtensions())
         val (layers, debugUtilsMessengerCreateInfo) = getDebugConfig()
 
         // Create the Vulkan instance
         Arbor.d("Creating Vulkan instance.")
-        Arbor.d("\tRequiring Extensions: %s", requiredExtensions)
         Arbor.d("\tRequiring Layers: %s", layers)
+        // TODO: Eventually make this configurable for different versions
         val applicationInfo = VkApplicationInfo(makeVulkanVersion(1, 1, 0))
-        instance = VkInstance(applicationInfo, requiredExtensions, layers, debugUtilsMessengerCreateInfo)
+        instance = VkInstance(applicationInfo, requiredInstanceExtensions, layers, debugUtilsMessengerCreateInfo)
+
+        surface = engine.createSurface(instance, window)
 
         Arbor.d("Selecting physical device.")
-        physicalDevice = engine.getDeviceSelector().select(instance, engine.getRequiredQueueFamilies())
+        physicalDevice = engine.getDeviceSelector().select(surface, engine.requiredQueueFamilies(), engine.requiredDeviceExtensions())
             ?: throw IllegalStateException("Failed to find an appropriate physical device.")
-        Arbor.d("Creating logical device.")
-        logicalDevice = engine.createLogicalDevice(physicalDevice, listOf())
+        Arbor.d("Creating logical device with extensions: %s", engine.requiredDeviceExtensions())
+        logicalDevice = engine.createLogicalDevice(physicalDevice, engine.requiredDeviceExtensions())
         Arbor.d("Graphics command queue: %s", logicalDevice.getCommandQueue(VkQueueFamilies.VK_QUEUE_GRAPHICS))
     }
 
@@ -62,10 +66,10 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
         @Suppress("DEPRECATION")
         when {
             checkLayersAvailable(DEBUG_LAYERS_STANDARD) ->
-                DEBUG_LAYERS_STANDARD.toMutableList() to engine.configureDebug(requiredExtensions)
+                DEBUG_LAYERS_STANDARD.toMutableList() to engine.configureDebug(requiredInstanceExtensions)
             checkLayersAvailable(DEBUG_LAYERS_LUNARG_STANDARD) -> {
                 Arbor.w("The available Vulkan SDK appears to be outdated. Using deprecated validation layers.")
-                DEBUG_LAYERS_LUNARG_STANDARD.toMutableList() to engine.configureDebug(requiredExtensions)
+                DEBUG_LAYERS_LUNARG_STANDARD.toMutableList() to engine.configureDebug(requiredInstanceExtensions)
             }
             else -> {
                 Arbor.e(
@@ -100,6 +104,8 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
         window.destroy()
         Arbor.d("Destroying logical device.")
         logicalDevice.destroy()
+        Arbor.d("Destroying surface.")
+        surface.destroy()
         Arbor.d("Destroying Vulkan instance.")
         instance.destroy()
     }

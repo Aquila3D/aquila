@@ -14,3 +14,7 @@ actual class VkInstance actual constructor(
     }
 
 }
+
+internal actual fun getRequiredInstanceExtensions(): MutableList<String> {
+    TODO("Not yet implemented")
+}
