@@ -55,7 +55,7 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
         surface = engine.createSurface(instance, window)
 
         Arbor.d("Selecting physical device.")
-        physicalDevice = engine.getDeviceSelector().select(instance, engine.requiredQueueFamilies())
+        physicalDevice = engine.getDeviceSelector().select(surface, engine.requiredQueueFamilies())
             ?: throw IllegalStateException("Failed to find an appropriate physical device.")
         Arbor.d("Creating logical device.")
         logicalDevice = engine.createLogicalDevice(physicalDevice, listOf())

@@ -31,7 +31,7 @@ open class JvmRendererEngine : RendererEngine {
 
     private val renderThread = Executors.newSingleThreadExecutor { Thread(it, "AquilaVK-Render-Thread") }
 
-    private val requiredQueueFamilies = listOf(VkQueueFamilies.VK_QUEUE_GRAPHICS)
+    private val requiredQueueFamilies = listOf(VkQueueFamilies.VK_QUEUE_GRAPHICS, VkQueueFamilies.VK_QUEUE_PRESENTATION)
 
     private val instanceExtensions: List<String> // Can't initialize this here because it must be after GLFW is initialized
 
@@ -57,7 +57,7 @@ open class JvmRendererEngine : RendererEngine {
 
     // Handle canvas resize
     private val glfwWindowSizeCallback: GLFWWindowSizeCallback by lazy {
-        val callback = object: GLFWWindowSizeCallback() {
+        val callback = object : GLFWWindowSizeCallback() {
             override fun invoke(window: Long, width: Int, height: Int) {
                 Arbor.d("Window Resize: [WxH] = [%dx%d]", width, height)
                 if (width <= 0 || height <= 0) {
@@ -111,20 +111,30 @@ open class JvmRendererEngine : RendererEngine {
 
     override fun createLogicalDevice(physicalDevice: VkPhysicalDevice, requiredExtensions: List<String>): VkDevice {
         // Prepare the command queue creation information
-        val pQueuePriorities = memAllocFloat(1).put(0.0f)
+        val pQueuePriorities = memAllocFloat(2).put(1.0f)
         pQueuePriorities.flip()
-        val queueCreateInfo =
-            physicalDevice.getQueueFamilyIndices()[VkQueueFamilies.VK_QUEUE_GRAPHICS]?.let {
-                VkDeviceQueueCreateInfo.calloc(1)
-                    .sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
-                    .queueFamilyIndex(it)
-                    .pQueuePriorities(pQueuePriorities)
-            } ?: throw IllegalStateException(
-                "Unable to create logical device due to missing graphics command queue family index. This is a bug " +
-                        "in the used DeviceSelector (${getDeviceSelector()::class.qualifiedName}) as the selected " +
-                        "VkPhysicalDevice does not support a required queue family. If you are using a library " +
-                        "provided DeviceSelector, please report this at https://github.com/Aquila3D/aquila/issues"
-            )
+        val queueCreateInfo = VkDeviceQueueCreateInfo.calloc(2)
+
+        physicalDevice.getQueueFamilyIndices()[VkQueueFamilies.VK_QUEUE_GRAPHICS]?.let {
+            queueCreateInfo[0].sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
+                .queueFamilyIndex(it)
+                .pQueuePriorities(pQueuePriorities)
+        } ?: throw IllegalStateException(
+            "Unable to create logical device due to missing graphics command queue family index. This is a bug " +
+                    "in the used DeviceSelector (${getDeviceSelector()::class.qualifiedName}) as the selected " +
+                    "VkPhysicalDevice does not support a required queue family. If you are using a library " +
+                    "provided DeviceSelector, please report this at https://github.com/Aquila3D/aquila/issues"
+        )
+        physicalDevice.getQueueFamilyIndices()[VkQueueFamilies.VK_QUEUE_PRESENTATION]?.let {
+            queueCreateInfo[1].sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
+                .queueFamilyIndex(it)
+                .pQueuePriorities(pQueuePriorities)
+        } ?: throw IllegalStateException(
+            "Unable to create logical device due to missing presentation command queue family index. This is a bug " +
+                    "in the used DeviceSelector (${getDeviceSelector()::class.qualifiedName}) as the selected " +
+                    "VkPhysicalDevice does not support a required queue family. If you are using a library " +
+                    "provided DeviceSelector, please report this at https://github.com/Aquila3D/aquila/issues"
+        )
 
         // Prepare te extension loading information
         val extensions = memAllocPointer(requiredExtensions.size)
