@@ -1,7 +1,9 @@
 package org.aquila3d.core.renderer
 
 import com.toxicbakery.logging.Arbor
+import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.surface.Window
+import org.aquila3d.core.surface.getRequiredWindowExtensions
 import org.aquila3d.core.vulkan.*
 import kotlin.jvm.JvmField
 
@@ -36,19 +38,23 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
     private val requiredExtensions = mutableListOf<String>()
 
     private val instance: VkInstance
+    private val surface: Surface
     private val physicalDevice: VkPhysicalDevice
     private val logicalDevice: VkDevice
 
     init {
-        requiredExtensions.addAll(window.getRequiredExtensions())
+        requiredExtensions.addAll(getRequiredWindowExtensions())
         val (layers, debugUtilsMessengerCreateInfo) = getDebugConfig()
 
         // Create the Vulkan instance
         Arbor.d("Creating Vulkan instance.")
         Arbor.d("\tRequiring Extensions: %s", requiredExtensions)
         Arbor.d("\tRequiring Layers: %s", layers)
+        // TODO: Eventually make this configurable for different versions
         val applicationInfo = VkApplicationInfo(makeVulkanVersion(1, 1, 0))
         instance = VkInstance(applicationInfo, requiredExtensions, layers, debugUtilsMessengerCreateInfo)
+
+        surface = engine.createSurface(instance, window)
 
         Arbor.d("Selecting physical device.")
         physicalDevice = engine.getDeviceSelector().select(instance, engine.getRequiredQueueFamilies())
@@ -100,6 +106,8 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
         window.destroy()
         Arbor.d("Destroying logical device.")
         logicalDevice.destroy()
+        Arbor.d("Destroying surface.")
+        surface.destroy()
         Arbor.d("Destroying Vulkan instance.")
         instance.destroy()
     }

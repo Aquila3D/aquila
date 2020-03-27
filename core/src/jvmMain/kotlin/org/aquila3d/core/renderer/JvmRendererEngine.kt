@@ -8,11 +8,13 @@ import org.aquila3d.core.input.Event
 import org.aquila3d.core.input.EventSource
 import org.aquila3d.core.input.InputEvent
 import org.aquila3d.core.input.InputEventListener
+import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.surface.Window
 import org.aquila3d.core.vulkan.*
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWKeyCallback
 import org.lwjgl.glfw.GLFWVulkan
+import org.lwjgl.glfw.GLFWVulkan.glfwCreateWindowSurface
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkDeviceCreateInfo
@@ -70,6 +72,17 @@ open class JvmRendererEngine : RendererEngine {
 
     override fun getRequiredQueueFamilies(): List<VkQueueFamilies> {
         return requiredQueueFamilies
+    }
+
+    override fun createSurface(instance: VkInstance, window: Window): Surface {
+        val pSurface = memAllocLong(1)
+        val err = glfwCreateWindowSurface(instance.instance, window.window, null, pSurface)
+        val surface = pSurface[0]
+        memFree(pSurface) // Cleanup the native memory
+        if (err != VK_SUCCESS) {
+            throw AssertionError("Failed to create surface: ${VkResult(err)}")
+        }
+        return Surface(surface)
     }
 
     override fun createLogicalDevice(physicalDevice: VkPhysicalDevice, requiredExtensions: List<String>): VkDevice {

@@ -46,11 +46,11 @@ actual class Window actual constructor(width: Int, height: Int, title: String) {
         TriangleDemo.height = height
         swapchainRecreator.mustRecreate = true*/
     }
+}
 
-    actual fun getRequiredExtensions(): List<String> {
-        val requiredExtensions = glfwGetRequiredInstanceExtensions()
-            ?: throw AssertionError("Failed to find list of required Vulkan extensions")
+internal actual fun getRequiredWindowExtensions(): List<String> {
+    val requiredExtensions = glfwGetRequiredInstanceExtensions()
+        ?: throw AssertionError("Failed to find list of required Vulkan extensions")
 
-        return mutableListOf(requiredExtensions.stringUTF8)
-    }
+    return mutableListOf(requiredExtensions.stringUTF8)
 }
