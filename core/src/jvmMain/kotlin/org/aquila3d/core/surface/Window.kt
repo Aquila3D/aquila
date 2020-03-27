@@ -1,7 +1,6 @@
 package org.aquila3d.core.surface
 
 import org.lwjgl.glfw.GLFW.*
-import org.lwjgl.glfw.GLFWWindowSizeCallback
 
 
 actual class Window actual constructor(width: Int, height: Int, title: String) {
