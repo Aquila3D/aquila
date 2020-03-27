@@ -12,7 +12,7 @@ actual class VkDebugUtilsMessengerCallbackCreateInfo(internal val callback: VkDe
      * It is expected that the JVM implementation of [VkInstance] will free the native memory associated with this.
      */
     internal var dbgCreateInfo: VkDebugUtilsMessengerCreateInfoEXT = VkDebugUtilsMessengerCreateInfoEXT.malloc()
-        .sType(EXTDebugUtils.VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT)
+        .sType(VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT)
         .pNext(NULL)
         .flags(0)
         .pfnUserCallback(callback.function)
