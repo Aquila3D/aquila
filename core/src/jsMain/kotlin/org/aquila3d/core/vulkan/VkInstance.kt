@@ -14,3 +14,7 @@ actual class VkInstance actual constructor(
     }
 
 }
+
+actual fun getRequiredInstanceExtensions(): List<String> {
+    TODO("Not yet implemented")
+}

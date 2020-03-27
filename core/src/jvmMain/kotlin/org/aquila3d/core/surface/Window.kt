@@ -1,8 +1,6 @@
 package org.aquila3d.core.surface
 
 import org.lwjgl.glfw.GLFW.*
-import org.lwjgl.glfw.GLFWVulkan.glfwGetRequiredInstanceExtensions
-import org.lwjgl.glfw.GLFWVulkan.glfwVulkanSupported
 import org.lwjgl.glfw.GLFWWindowSizeCallback
 
 
@@ -46,11 +44,4 @@ actual class Window actual constructor(width: Int, height: Int, title: String) {
         TriangleDemo.height = height
         swapchainRecreator.mustRecreate = true*/
     }
-}
-
-internal actual fun getRequiredWindowExtensions(): List<String> {
-    val requiredExtensions = glfwGetRequiredInstanceExtensions()
-        ?: throw AssertionError("Failed to find list of required Vulkan extensions")
-
-    return mutableListOf(requiredExtensions.stringUTF8)
 }

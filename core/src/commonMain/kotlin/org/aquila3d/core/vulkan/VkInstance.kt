@@ -1,5 +1,7 @@
 package org.aquila3d.core.vulkan
 
+expect fun getRequiredInstanceExtensions(): List<String>
+
 expect class VkInstance(
     applicationInfo: VkApplicationInfo,
     requiredExtensions: List<String>,

@@ -26,11 +26,13 @@ import java.util.concurrent.Executors
 
 open class JvmRendererEngine : RendererEngine {
 
-    private val requiredQueueFamilies = listOf(VkQueueFamilies.VK_QUEUE_GRAPHICS)
-
     private val eventListeners: MutableSet<InputEventListener> = ConcurrentHashMap.newKeySet()
 
     private val renderThread = Executors.newSingleThreadExecutor { Thread(it, "AquilaVK-Render-Thread") }
+
+    private val requiredQueueFamilies = listOf(VkQueueFamilies.VK_QUEUE_GRAPHICS)
+
+    private val instanceExtensions: List<String> // Can't initialize this here because it must be after GLFW is initialized
 
     @Volatile
     private var shouldRender = false
@@ -59,6 +61,16 @@ open class JvmRendererEngine : RendererEngine {
         if (!GLFWVulkan.glfwVulkanSupported()) {
             throw AssertionError("GLFW failed to find the Vulkan loader")
         }
+        Arbor.d("GLFW Initialized.")
+        instanceExtensions = getRequiredInstanceExtensions()
+    }
+
+    override fun requiredInstanceExtensions(): List<String> {
+        return instanceExtensions
+    }
+
+    override fun requiredQueueFamilies(): List<VkQueueFamilies> {
+        return requiredQueueFamilies
     }
 
     override fun configureDebug(requiredExtensions: MutableList<String>): VkDebugUtilsMessengerCallbackCreateInfo {
@@ -70,10 +82,6 @@ open class JvmRendererEngine : RendererEngine {
         return FirstDeviceSelector()
     }
 
-    override fun getRequiredQueueFamilies(): List<VkQueueFamilies> {
-        return requiredQueueFamilies
-    }
-
     override fun createSurface(instance: VkInstance, window: Window): Surface {
         val pSurface = memAllocLong(1)
         val err = glfwCreateWindowSurface(instance.instance, window.window, null, pSurface)
@@ -82,7 +90,7 @@ open class JvmRendererEngine : RendererEngine {
         if (err != VK_SUCCESS) {
             throw AssertionError("Failed to create surface: ${VkResult(err)}")
         }
-        return Surface(surface)
+        return Surface(instance, surface)
     }
 
     override fun createLogicalDevice(physicalDevice: VkPhysicalDevice, requiredExtensions: List<String>): VkDevice {
@@ -126,7 +134,7 @@ open class JvmRendererEngine : RendererEngine {
             throw AssertionError("Failed to create device: " + VkResult(err))
         }
         val logicalDevice = org.lwjgl.vulkan.VkDevice(device, physicalDevice.device, deviceCreateInfo)
-        val retval = VkDevice(logicalDevice, physicalDevice, getRequiredQueueFamilies())
+        val retval = VkDevice(logicalDevice, physicalDevice, requiredQueueFamilies())
 
         // Cleanup the native memory
         deviceCreateInfo.free()
@@ -183,7 +191,7 @@ open class JvmRendererEngine : RendererEngine {
         return VkDebugUtilsMessengerCallback()
     }
 
-    protected suspend fun render() = withContext(renderThread.asCoroutineDispatcher()) {
+    private suspend fun render() = withContext(renderThread.asCoroutineDispatcher()) {
         shouldRender = true
         while (shouldRender) {
             delay(16) // 60 Hz, this is temporary for now

@@ -8,11 +8,13 @@ import org.aquila3d.core.vulkan.*
 
 interface RendererEngine {
 
+    fun requiredInstanceExtensions(): List<String>
+
+    fun requiredQueueFamilies(): List<VkQueueFamilies>
+
     fun configureDebug(requiredExtensions: MutableList<String>): VkDebugUtilsMessengerCallbackCreateInfo
 
     fun getDeviceSelector(): DeviceSelector
-
-    fun getRequiredQueueFamilies(): List<VkQueueFamilies>
 
     fun createSurface(instance: VkInstance, window: Window): Surface
 

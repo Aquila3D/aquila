@@ -20,7 +20,3 @@ actual class Window {
     actual fun onResized(width: Int, height: Int) {
     }
 }
-
-internal actual fun getRequiredWindowExtensions(): List<String> {
-    TODO("Not yet implemented")
-}
