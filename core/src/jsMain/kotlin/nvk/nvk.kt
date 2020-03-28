@@ -2,4 +2,12 @@
 @file:JsNonModule
 package nvk
 
-external class VulkanWindow
+import kotlin.js.Json
+
+external class VulkanWindow(config: Json) {
+
+    var width: Int
+    var height: Int
+    var title: String
+
+}
