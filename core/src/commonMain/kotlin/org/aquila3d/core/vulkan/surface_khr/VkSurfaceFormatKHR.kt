@@ -1,6 +1,8 @@
 package org.aquila3d.core.vulkan.surface_khr
 
+import org.aquila3d.core.vulkan.VkFormat
+
 expect class VkSurfaceFormatKHR {
-    fun getColorSpace(): Int
-    fun getFormat(): Int
+    fun getColorSpace(): VkColorSpaceKHR
+    fun getFormat(): VkFormat
 }

@@ -8,7 +8,7 @@ actual class Window {
     val window: VulkanWindow
 
     actual constructor(width: Int, height: Int, title: String) {
-        window = VulkanWindow::class.js.createInstance()
+        window = VulkanWindow() //::class.js.createInstance()
         window.asDynamic()["width"] = width
         window.asDynamic()["height"] = height
         window.asDynamic()["title"] = title

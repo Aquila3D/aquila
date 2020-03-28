@@ -51,15 +51,15 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
         // TODO: Eventually make this configurable for different versions
         val applicationInfo = VkApplicationInfo(makeVulkanVersion(1, 1, 0))
         instance = VkInstance(applicationInfo, requiredInstanceExtensions, layers, debugUtilsMessengerCreateInfo)
-
+        Arbor.d("Creating surface.")
         surface = engine.createSurface(instance, window)
-
         Arbor.d("Selecting physical device.")
         physicalDevice = engine.getDeviceSelector().select(surface, engine.requiredQueueFamilies(), engine.requiredDeviceExtensions())
             ?: throw IllegalStateException("Failed to find an appropriate physical device.")
         Arbor.d("Creating logical device with extensions: %s", engine.requiredDeviceExtensions())
         logicalDevice = engine.createLogicalDevice(physicalDevice, engine.requiredDeviceExtensions())
-        Arbor.d("Graphics command queue: %s", logicalDevice.getCommandQueue(VkQueueFamilies.VK_QUEUE_GRAPHICS))
+        Arbor.d("Creating swapchain")
+        engine.createSwapchain(physicalDevice)
     }
 
     private fun getDebugConfig(): DebugConfig = if (isDebug) {

@@ -10,7 +10,11 @@ import org.aquila3d.core.input.InputEvent
 import org.aquila3d.core.input.InputEventListener
 import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.surface.Window
+import org.aquila3d.core.surface.swapchain.SwapchainFeatures
 import org.aquila3d.core.vulkan.*
+import org.aquila3d.core.vulkan.surface_khr.VkColorSpaceKHR
+import org.aquila3d.core.vulkan.surface_khr.VkPresentModeKHR
+import org.aquila3d.core.vulkan.surface_khr.VkSurfaceFormatKHR
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWKeyCallback
 import org.lwjgl.glfw.GLFWVulkan
@@ -37,6 +41,10 @@ open class JvmRendererEngine : RendererEngine {
     private val requiredQueueFamilies = listOf(VkQueueFamilies.VK_QUEUE_GRAPHICS, VkQueueFamilies.VK_QUEUE_PRESENTATION)
 
     private val instanceExtensions: MutableList<String> // Can't initialize this here because it must be after GLFW is initialized
+
+    private lateinit var surfaceFormat: VkSurfaceFormatKHR
+
+    private lateinit var presentationMode: VkPresentModeKHR
 
     @Volatile
     private var shouldRender = false
@@ -179,6 +187,12 @@ open class JvmRendererEngine : RendererEngine {
         return retval
     }
 
+    override fun createSwapchain(physicalDevice: VkPhysicalDevice) {
+        val swapchainFeatures = physicalDevice.getSwapchainFeatures()
+        surfaceFormat = chooseSurfaceFormat(swapchainFeatures.formats)
+        presentationMode = choosePresentationMode(swapchainFeatures.presentMode)
+    }
+
     override fun onAttachedToWindow(window: Window) {
         this.window = window
         glfwSetKeyCallback(window.window, glfwKeyCallback)
@@ -203,7 +217,6 @@ open class JvmRendererEngine : RendererEngine {
                 delay(16) // 60 Hz, this is temporary for now
             }
             stopRenderLoop()
-
         }
     }
 
@@ -223,6 +236,31 @@ open class JvmRendererEngine : RendererEngine {
     @Suppress("MemberVisibilityCanBePrivate")
     protected fun createDebugCallback(): VkDebugUtilsMessengerCallback {
         return VkDebugUtilsMessengerCallback()
+    }
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    protected fun chooseSurfaceFormat(formats: List<VkSurfaceFormatKHR>): VkSurfaceFormatKHR {
+        var selectedFormat = formats[0]
+        for (format in formats) {
+            if (format.getFormat() == VkFormat.VK_FORMAT_B8G8R8A8_UNORM && format.getColorSpace() == VkColorSpaceKHR.VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+                selectedFormat = format
+            }
+        }
+
+        Arbor.d("Selected format: %s", selectedFormat)
+        return selectedFormat
+    }
+
+    protected fun choosePresentationMode(availableModes: List<VkPresentModeKHR>): VkPresentModeKHR {
+        var selectedMode = VkPresentModeKHR.VK_PRESENT_MODE_FIFO_KHR
+        for (mode in availableModes) {
+            if (mode == VkPresentModeKHR.VK_PRESENT_MODE_MAILBOX_KHR) {
+                selectedMode = mode
+            }
+        }
+
+        Arbor.d("Selected presentation mode: %s", selectedMode)
+        return selectedMode
     }
 
     private suspend fun render() = withContext(renderThread.asCoroutineDispatcher()) {

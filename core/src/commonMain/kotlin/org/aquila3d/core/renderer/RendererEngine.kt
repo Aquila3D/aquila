@@ -22,6 +22,8 @@ interface RendererEngine {
 
     fun createLogicalDevice(physicalDevice: VkPhysicalDevice, requiredExtensions: List<String>): VkDevice
 
+    fun createSwapchain(physicalDevice: VkPhysicalDevice)
+
     fun onAttachedToWindow(window: Window)
 
     fun registerInputEventListener(listener: InputEventListener)

@@ -3,6 +3,7 @@ package org.aquila3d.core.vulkan
 import com.toxicbakery.logging.Arbor
 import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.surface.swapchain.SwapchainFeatures
+import org.aquila3d.core.vulkan.surface_khr.VkPresentModeKHR
 import org.aquila3d.core.vulkan.surface_khr.VkSurfaceCapabilitiesKHR
 import org.aquila3d.core.vulkan.surface_khr.VkSurfaceFormatKHR
 import org.lwjgl.system.MemoryUtil.memAllocInt
@@ -133,7 +134,7 @@ actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDe
         return formats
     }
 
-    private fun getPresentationModes(): List<Int> {
+    private fun getPresentationModes(): List<VkPresentModeKHR> {
         val presentModeCountPointer = memAllocInt(1)
         var err = vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface.surfaceHandle, presentModeCountPointer, null)
         val presentModeCount = presentModeCountPointer[0]
@@ -147,9 +148,9 @@ actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDe
             throw AssertionError(
                 "Failed to get physical device surface presentation modes: ${VkResult(err)}")
         }
-        val modes = mutableListOf<Int>()
+        val modes = mutableListOf<VkPresentModeKHR>()
         for (i in 0 until presentModeCount) {
-            modes.add(pPresentModes.get(i))
+            modes.add(VkPresentModeKHR.from(pPresentModes.get(i))!!)
         }
         memFree(pPresentModes)
         return modes

@@ -51,7 +51,6 @@ actual class FirstDeviceSelector : DeviceSelector {
 
     private fun ensureSwapchainSupport(physicalDevice: VkPhysicalDevice): Boolean {
         val swapchainFeatures = physicalDevice.getSwapchainFeatures()
-        Arbor.d("Swapchain Features: %s", swapchainFeatures)
         return (swapchainFeatures.formats.isNotEmpty() && swapchainFeatures.presentMode.isNotEmpty())
     }
 
