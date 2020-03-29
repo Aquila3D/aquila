@@ -15,13 +15,8 @@ import org.lwjgl.vulkan.KHRSurface
 import org.lwjgl.vulkan.KHRSurface.VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
 import org.lwjgl.vulkan.KHRSwapchain
 import org.lwjgl.vulkan.KHRSwapchain.vkCreateSwapchainKHR
-import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkSwapchainCreateInfoKHR
-import java.nio.IntBuffer
-import kotlin.math.max
-import kotlin.math.min
-
 
 open class DefaultSwapchainCreator(
     device: VkDevice,
