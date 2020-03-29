@@ -17,23 +17,23 @@ actual class Swapchain(val handle: Long, val format: VkSurfaceFormatKHR, val dev
     private var imageViews: LongArray
 
     init {
-        val pImageCount = memAllocInt(1)
-        var err = vkGetSwapchainImagesKHR(device.handle, handle, pImageCount, null)
-        val imageCount = pImageCount[0]
+        val imageCountPointer = memAllocInt(1)
+        var err = vkGetSwapchainImagesKHR(device.handle, handle, imageCountPointer, null)
+        val imageCount = imageCountPointer[0]
         if (err != VK_SUCCESS) {
             throw AssertionError("Failed to get number of swapchain images: ${VkResult(err)}")
         }
 
-        val pSwapchainImages = memAllocLong(imageCount)
-        err = vkGetSwapchainImagesKHR(device.handle, handle, pImageCount, pSwapchainImages)
+        val imagesPointer = memAllocLong(imageCount)
+        err = vkGetSwapchainImagesKHR(device.handle, handle, imageCountPointer, imagesPointer)
         if (err != VK_SUCCESS) {
             throw AssertionError("Failed to get swapchain images: ${VkResult(err)}")
         }
-        memFree(pImageCount)
+        memFree(imageCountPointer)
 
         images = LongArray(imageCount)
         imageViews = LongArray(imageCount)
-        val pBufferView = memAllocLong(1)
+        val bufferViewPointer = memAllocLong(1)
         val colorAttachmentView = VkImageViewCreateInfo.calloc()
             .sType(VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO)
             .format(format.getFormat().value)
@@ -43,21 +43,21 @@ actual class Swapchain(val handle: Long, val format: VkSurfaceFormatKHR, val dev
             .levelCount(1)
             .layerCount(1)
         for (i in 0 until imageCount) {
-            images[i] = pSwapchainImages[i]
+            images[i] = imagesPointer[i]
             colorAttachmentView.image(images[i])
-            err = vkCreateImageView(device.handle, colorAttachmentView, null, pBufferView)
-            imageViews[i] = pBufferView[0]
+            err = vkCreateImageView(device.handle, colorAttachmentView, null, bufferViewPointer)
+            imageViews[i] = bufferViewPointer[0]
             if (err != VK_SUCCESS) {
                 throw AssertionError("Failed to create image view: ${VkResult(err)}")
             }
         }
         colorAttachmentView.free()
-        memFree(pBufferView)
-        memFree(pSwapchainImages)
+        memFree(bufferViewPointer)
+        memFree(imagesPointer)
     }
 
     actual fun destroy() {
-        if (handle != VK10.VK_NULL_HANDLE) {
+        if (handle != VK_NULL_HANDLE) {
             KHRSwapchain.vkDestroySwapchainKHR(device.handle, handle, null)
         }
     }

@@ -89,6 +89,8 @@ class Renderer(
         engine.destroy()
         Arbor.d("Destroying window.")
         window.destroy()
+        Arbor.d("Destroying swapchain")
+        swapchain?.destroy()
         Arbor.d("Destroying logical device.")
         logicalDevice.destroy()
         Arbor.d("Destroying surface.")

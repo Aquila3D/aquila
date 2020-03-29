@@ -4,18 +4,21 @@ import com.toxicbakery.logging.Arbor
 import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.surface.Window
 import org.aquila3d.core.vulkan.*
-import org.aquila3d.core.vulkan.VkDevice
-import org.aquila3d.core.vulkan.VkExtent2D
-import org.aquila3d.core.vulkan.VkPhysicalDevice
 import org.aquila3d.core.vulkan.surface_khr.VkColorSpaceKHR
 import org.aquila3d.core.vulkan.surface_khr.VkPresentModeKHR
 import org.aquila3d.core.vulkan.surface_khr.VkSurfaceCapabilitiesKHR
 import org.aquila3d.core.vulkan.surface_khr.VkSurfaceFormatKHR
 import org.lwjgl.system.MemoryUtil
 import org.lwjgl.system.MemoryUtil.NULL
-import org.lwjgl.vulkan.*
+import org.lwjgl.system.MemoryUtil.memAllocInt
+import org.lwjgl.vulkan.KHRSurface
 import org.lwjgl.vulkan.KHRSurface.VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
+import org.lwjgl.vulkan.KHRSwapchain
 import org.lwjgl.vulkan.KHRSwapchain.vkCreateSwapchainKHR
+import org.lwjgl.vulkan.VK10
+import org.lwjgl.vulkan.VK10.*
+import org.lwjgl.vulkan.VkSwapchainCreateInfoKHR
+import java.nio.IntBuffer
 import kotlin.math.max
 import kotlin.math.min
 
@@ -85,16 +88,16 @@ open class DefaultSwapchainCreator(device: VkDevice, physicalDevice: VkPhysicalD
             capabilities.currentTransform()
         }
 
+        val indices = physicalDevice.getQueueFamilyIndices()
         val swapchainCI = VkSwapchainCreateInfoKHR.calloc()
             .sType(KHRSwapchain.VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR)
             .surface(surface.surfaceHandle)
             .minImageCount(numberOfSwapchainImages)
             .imageFormat(surfaceFormat.getFormat().value)
             .imageColorSpace(surfaceFormat.getColorSpace().value)
-            .imageUsage(VK10.VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
-            .preTransform(preTransform)
             .imageArrayLayers(1)
-            .imageSharingMode(VK10.VK_SHARING_MODE_EXCLUSIVE)
+            .imageUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+            .preTransform(preTransform)
             .presentMode(presentationMode.value)
             .oldSwapchain(oldSwapchain?.handle ?: NULL)
             .clipped(true)
@@ -102,12 +105,24 @@ open class DefaultSwapchainCreator(device: VkDevice, physicalDevice: VkPhysicalD
         swapchainCI.imageExtent()
             .width(window.getWidth())
             .height(window.getHeight())
+
+        if (indices[VkQueueFamilies.VK_QUEUE_GRAPHICS] != indices[VkQueueFamilies.VK_QUEUE_PRESENTATION]) {
+            swapchainCI.imageSharingMode(VK_SHARING_MODE_CONCURRENT)
+            val queueFamilyIndicies = memAllocInt(2)
+            queueFamilyIndicies.put(0, indices[VkQueueFamilies.VK_QUEUE_GRAPHICS]!!)
+            queueFamilyIndicies.put(1, indices[VkQueueFamilies.VK_QUEUE_PRESENTATION]!!)
+            swapchainCI.pQueueFamilyIndices(queueFamilyIndicies)
+        } else {
+            swapchainCI.imageSharingMode(VK_SHARING_MODE_EXCLUSIVE)
+            swapchainCI.pQueueFamilyIndices(null) // Optional
+        }
+
         val swapchainPointer = MemoryUtil.memAllocLong(1)
         val err = vkCreateSwapchainKHR(device.handle, swapchainCI, null, swapchainPointer)
         swapchainCI.free()
         val handle = swapchainPointer[0]
         MemoryUtil.memFree(swapchainPointer)
-        if (err != VK10.VK_SUCCESS) {
+        if (err != VK_SUCCESS) {
             throw AssertionError("Failed to create swap chain: ${VkResult(err)}")
         }
         val newSwapchain = Swapchain(handle, surfaceFormat, device)
