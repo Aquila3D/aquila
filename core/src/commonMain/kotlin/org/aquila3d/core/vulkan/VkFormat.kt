@@ -281,6 +281,8 @@ enum class VkFormat(val value: Int) {
 
     companion object {
         private val map = values().associateBy(VkFormat::value)
-        fun from(type: Int) = map[type]
+        fun from(type: Int): VkFormat {
+            return map[type] ?: throw IllegalArgumentException("Unrecognized format code: $type")
+        }
     }
 }

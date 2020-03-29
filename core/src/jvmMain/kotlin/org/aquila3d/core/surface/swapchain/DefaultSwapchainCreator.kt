@@ -23,10 +23,12 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-open class DefaultSwapchainCreator(device: VkDevice, physicalDevice: VkPhysicalDevice, surface: Surface) :
-    SwapchainCreator(
-        device, physicalDevice, surface
-    ) {
+open class DefaultSwapchainCreator(
+    device: VkDevice,
+    physicalDevice: VkPhysicalDevice,
+    surface: Surface
+) :
+    SwapchainCreator(device, physicalDevice, surface) {
 
     override fun createSwapchain(window: Window): Swapchain {
         return buildSwapchain(window, null)
@@ -147,12 +149,9 @@ open class DefaultSwapchainCreator(device: VkDevice, physicalDevice: VkPhysicalD
 
     @Suppress("MemberVisibilityCanBePrivate")
     protected fun choosePresentationMode(availableModes: List<VkPresentModeKHR>): VkPresentModeKHR {
-        var selectedMode = VkPresentModeKHR.VK_PRESENT_MODE_FIFO_KHR
-        for (mode in availableModes) {
-            if (mode == VkPresentModeKHR.VK_PRESENT_MODE_MAILBOX_KHR) {
-                selectedMode = mode
-            }
-        }
+        var selectedMode = availableModes
+            .find { mode -> mode == VkPresentModeKHR.VK_PRESENT_MODE_MAILBOX_KHR }
+            ?: VkPresentModeKHR.VK_PRESENT_MODE_FIFO_KHR
 
         Arbor.d("Selected presentation mode: %s", selectedMode)
         return selectedMode
@@ -165,11 +164,9 @@ open class DefaultSwapchainCreator(device: VkDevice, physicalDevice: VkPhysicalD
             val actualExtent = VkExtent2D(window.getWidth(), window.getHeight())
 
             actualExtent.width =
-                max(capabilities.minImageExtent().width, min(capabilities.maxImageExtent().width, actualExtent.width))
-            actualExtent.height = max(
-                capabilities.minImageExtent().height,
-                min(capabilities.maxImageExtent().height, actualExtent.height)
-            )
+                actualExtent.width.coerceIn(capabilities.minImageExtent().width, capabilities.maxImageExtent().width)
+            actualExtent.height =
+                actualExtent.height.coerceIn(capabilities.minImageExtent().height, capabilities.maxImageExtent().height)
             retval = actualExtent
         }
         Arbor.d("Selected extent: %s", retval)

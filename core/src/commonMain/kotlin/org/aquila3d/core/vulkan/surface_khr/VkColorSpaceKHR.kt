@@ -24,6 +24,8 @@ enum class VkColorSpaceKHR(val value: Int) {
 
     companion object {
         private val map = values().associateBy(VkColorSpaceKHR::value)
-        fun from(type: Int) = map[type]
+        fun from(type: Int): VkColorSpaceKHR {
+            return map[type] ?: throw IllegalArgumentException("Unrecognized color space code: $type")
+        }
     }
 }

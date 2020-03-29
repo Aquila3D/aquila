@@ -16,9 +16,12 @@ actual class VkDevice(
     init {
         for (family in queueFamilies) {
             val pQueue = memAllocPointer(1)
+            val familyIndex = physicalDevice.getQueueFamilyIndices()[family]
             vkGetDeviceQueue(
-                handle, physicalDevice.getQueueFamilyIndices()[family]
-                    ?: error("No queue for type $family found"), 0, pQueue
+                handle,
+                familyIndex ?: error("No queue for type $family found"),
+                0,
+                pQueue
             )
             val queue = pQueue[0]
             memFree(pQueue)

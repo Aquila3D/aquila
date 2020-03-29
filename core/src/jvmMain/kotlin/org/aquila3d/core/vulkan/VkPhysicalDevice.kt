@@ -56,7 +56,7 @@ actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDe
         }
         memFree(supportsPresent)
         queueProps.free()
-        return@lazy queueFamilies
+        queueFamilies
     }
 
     private val extensions: Map<String, Int> by lazy {
@@ -75,9 +75,9 @@ actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDe
         val extensions = mutableMapOf<String, Int>()
         for (index in 0 until extensionCount) {
             extensionsPointer.position(index)
-            extensions.put(extensionsPointer.extensionNameString(), extensionsPointer.specVersion())
+            extensions[extensionsPointer.extensionNameString()] = extensionsPointer.specVersion()
         }
-        return@lazy extensions
+        extensions
     }
 
     private val swapFeatures: SwapchainFeatures by lazy {
@@ -85,7 +85,7 @@ actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDe
         val formats = getSurfaceFormats()
         val presentationModes = getPresentationModes()
 
-        return@lazy SwapchainFeatures(surfaceCapabilities, formats, presentationModes)
+        SwapchainFeatures(surfaceCapabilities, formats, presentationModes)
     }
 
     actual fun getQueueFamilyIndices(): Map<VkQueueFamilies, Int> {
@@ -125,11 +125,7 @@ actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDe
             throw AssertionError(
                 "Failed to get physical device surface presentation modes: ${VkResult(err)}")
         }
-        val formats = mutableListOf<VkSurfaceFormatKHR>()
-        for (i in 0 until formatCount) {
-            val format = formatsPointer.get(i)
-            formats.add(VkSurfaceFormatKHR(format))
-        }
+        val formats = formatsPointer.map { format -> VkSurfaceFormatKHR(format) }
         formatsPointer.free()
         return formats
     }
@@ -150,7 +146,7 @@ actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDe
         }
         val modes = mutableListOf<VkPresentModeKHR>()
         for (i in 0 until presentModeCount) {
-            modes.add(VkPresentModeKHR.from(pPresentModes.get(i))!!)
+            modes.add(VkPresentModeKHR.from(pPresentModes.get(i)))
         }
         memFree(pPresentModes)
         return modes

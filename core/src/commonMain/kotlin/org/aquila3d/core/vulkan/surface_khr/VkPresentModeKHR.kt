@@ -11,6 +11,8 @@ enum class VkPresentModeKHR(val value: Int) {
 
     companion object {
         private val map = values().associateBy(VkPresentModeKHR::value)
-        fun from(type: Int) = map[type]
+        fun from(type: Int): VkPresentModeKHR {
+            return map[type] ?: throw IllegalArgumentException("Unrecognized presentation mode code: $type")
+        }
     }
 }
