@@ -8,6 +8,10 @@ import org.aquila3d.core.vulkan.*
 
 interface RendererEngine {
 
+    fun setRenderer(renderer: IRenderer)
+
+    fun isDebugMode(): Boolean
+
     fun requiredInstanceExtensions(): List<String>
 
     fun requiredDeviceExtensions(): List<String>
@@ -18,11 +22,9 @@ interface RendererEngine {
 
     fun getDeviceSelector(): DeviceSelector
 
-    fun createSurface(instance: VkInstance, window: Window): Surface
+    fun createSurface(instance: VkInstance): Surface
 
     fun createLogicalDevice(physicalDevice: VkPhysicalDevice, requiredExtensions: List<String>): VkDevice
-
-    fun createSwapchain(physicalDevice: VkPhysicalDevice)
 
     fun onAttachedToWindow(window: Window)
 
@@ -37,4 +39,6 @@ interface RendererEngine {
     fun resumeRenderLoop()
 
     fun pauseRenderLoop()
+
+    fun destroy()
 }

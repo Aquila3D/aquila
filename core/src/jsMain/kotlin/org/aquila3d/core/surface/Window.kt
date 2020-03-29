@@ -19,4 +19,12 @@ actual class Window {
 
     actual fun onResized(width: Int, height: Int) {
     }
+
+    actual fun getWidth(): Int {
+        TODO("Not yet implemented")
+    }
+
+    actual fun getHeight(): Int {
+        TODO("Not yet implemented")
+    }
 }

@@ -10,11 +10,7 @@ import org.aquila3d.core.input.InputEvent
 import org.aquila3d.core.input.InputEventListener
 import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.surface.Window
-import org.aquila3d.core.surface.swapchain.SwapchainFeatures
 import org.aquila3d.core.vulkan.*
-import org.aquila3d.core.vulkan.surface_khr.VkColorSpaceKHR
-import org.aquila3d.core.vulkan.surface_khr.VkPresentModeKHR
-import org.aquila3d.core.vulkan.surface_khr.VkSurfaceFormatKHR
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWKeyCallback
 import org.lwjgl.glfw.GLFWVulkan
@@ -30,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
 
-open class JvmRendererEngine : RendererEngine {
+open class JvmRendererEngine(private val isDebug: Boolean) : RendererEngine {
 
     private val eventListeners: MutableSet<InputEventListener> = ConcurrentHashMap.newKeySet()
 
@@ -40,16 +36,13 @@ open class JvmRendererEngine : RendererEngine {
 
     private val requiredQueueFamilies = listOf(VkQueueFamilies.VK_QUEUE_GRAPHICS, VkQueueFamilies.VK_QUEUE_PRESENTATION)
 
-    private val instanceExtensions: MutableList<String> // Can't initialize this here because it must be after GLFW is initialized
-
-    private lateinit var surfaceFormat: VkSurfaceFormatKHR
-
-    private lateinit var presentationMode: VkPresentModeKHR
+    // Can't initialize this here because it must be after GLFW is initialized
+    private val instanceExtensions: MutableList<String>
 
     @Volatile
     private var shouldRender = false
 
-    private lateinit var window: Window
+    private lateinit var renderer: IRenderer
 
     private val glfwKeyCallback: GLFWKeyCallback by lazy {
         object : GLFWKeyCallback() {
@@ -68,17 +61,15 @@ open class JvmRendererEngine : RendererEngine {
 
     // Handle canvas resize
     private val glfwWindowSizeCallback: GLFWWindowSizeCallback by lazy {
-        val callback = object : GLFWWindowSizeCallback() {
+        return@lazy object : GLFWWindowSizeCallback() {
             override fun invoke(window: Long, width: Int, height: Int) {
                 Arbor.d("Window Resize: [WxH] = [%dx%d]", width, height)
                 if (width <= 0 || height <= 0) {
                     return
                 }
-                this@JvmRendererEngine.window.onResized(width, height)
+                renderer.onWindowResized(width, height)
             }
-
         }
-        return@lazy callback
     }
 
     init {
@@ -90,6 +81,14 @@ open class JvmRendererEngine : RendererEngine {
         }
         Arbor.d("GLFW Initialized.")
         instanceExtensions = getRequiredInstanceExtensions()
+    }
+
+    override fun setRenderer(renderer: IRenderer) {
+        this.renderer = renderer
+    }
+
+    override fun isDebugMode(): Boolean {
+        return isDebug
     }
 
     override fun requiredInstanceExtensions(): List<String> {
@@ -113,9 +112,9 @@ open class JvmRendererEngine : RendererEngine {
         return FirstDeviceSelector()
     }
 
-    override fun createSurface(instance: VkInstance, window: Window): Surface {
+    override fun createSurface(instance: VkInstance): Surface {
         val pSurface = memAllocLong(1)
-        val err = glfwCreateWindowSurface(instance.instance, window.window, null, pSurface)
+        val err = glfwCreateWindowSurface(instance.instance, renderer.getCurrentWindow().window, null, pSurface)
         val surface = pSurface[0]
         memFree(pSurface) // Cleanup the native memory
         if (err != VK_SUCCESS) {
@@ -187,14 +186,7 @@ open class JvmRendererEngine : RendererEngine {
         return retval
     }
 
-    override fun createSwapchain(physicalDevice: VkPhysicalDevice) {
-        val swapchainFeatures = physicalDevice.getSwapchainFeatures()
-        surfaceFormat = chooseSurfaceFormat(swapchainFeatures.formats)
-        presentationMode = choosePresentationMode(swapchainFeatures.presentMode)
-    }
-
     override fun onAttachedToWindow(window: Window) {
-        this.window = window
         glfwSetKeyCallback(window.window, glfwKeyCallback)
         glfwSetWindowSizeCallback(window.window, glfwWindowSizeCallback)
     }
@@ -209,14 +201,15 @@ open class JvmRendererEngine : RendererEngine {
 
     override fun startRenderLoop() {
         runBlocking {
-            async { render() }
-            while (!glfwWindowShouldClose(window.window)) {
+            val deferred = async { render() }
+            while (!glfwWindowShouldClose(renderer.getCurrentWindow().window)) {
                 // Handle window messages. Resize events happen exactly here.
                 // So it is safe to use the new swapchain images and framebuffers afterwards.
                 glfwPollEvents()
                 delay(16) // 60 Hz, this is temporary for now
             }
             stopRenderLoop()
+            deferred.await()
         }
     }
 
@@ -233,34 +226,13 @@ open class JvmRendererEngine : RendererEngine {
         shouldRender = false
     }
 
+    override fun destroy() {
+        stopRenderLoop()
+    }
+
     @Suppress("MemberVisibilityCanBePrivate")
     protected fun createDebugCallback(): VkDebugUtilsMessengerCallback {
         return VkDebugUtilsMessengerCallback()
-    }
-
-    @Suppress("MemberVisibilityCanBePrivate")
-    protected fun chooseSurfaceFormat(formats: List<VkSurfaceFormatKHR>): VkSurfaceFormatKHR {
-        var selectedFormat = formats[0]
-        for (format in formats) {
-            if (format.getFormat() == VkFormat.VK_FORMAT_B8G8R8A8_UNORM && format.getColorSpace() == VkColorSpaceKHR.VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-                selectedFormat = format
-            }
-        }
-
-        Arbor.d("Selected format: %s", selectedFormat)
-        return selectedFormat
-    }
-
-    protected fun choosePresentationMode(availableModes: List<VkPresentModeKHR>): VkPresentModeKHR {
-        var selectedMode = VkPresentModeKHR.VK_PRESENT_MODE_FIFO_KHR
-        for (mode in availableModes) {
-            if (mode == VkPresentModeKHR.VK_PRESENT_MODE_MAILBOX_KHR) {
-                selectedMode = mode
-            }
-        }
-
-        Arbor.d("Selected presentation mode: %s", selectedMode)
-        return selectedMode
     }
 
     private suspend fun render() = withContext(renderThread.asCoroutineDispatcher()) {

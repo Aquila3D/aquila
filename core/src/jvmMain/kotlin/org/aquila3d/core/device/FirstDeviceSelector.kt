@@ -1,6 +1,5 @@
 package org.aquila3d.core.device
 
-import com.toxicbakery.logging.Arbor
 import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.vulkan.VkInstance
 import org.aquila3d.core.vulkan.VkPhysicalDevice

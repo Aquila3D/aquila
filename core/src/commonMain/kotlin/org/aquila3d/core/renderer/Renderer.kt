@@ -3,33 +3,23 @@ package org.aquila3d.core.renderer
 import com.toxicbakery.logging.Arbor
 import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.surface.Window
+import org.aquila3d.core.surface.WindowProvider
+import org.aquila3d.core.surface.swapchain.Swapchain
+import org.aquila3d.core.surface.swapchain.SwapchainCreator
+import org.aquila3d.core.surface.swapchain.SwapchainCreatorFactory
 import org.aquila3d.core.vulkan.*
 import kotlin.jvm.JvmField
 
 private typealias DebugConfig = Pair<MutableList<String>, VkDebugUtilsMessengerCallbackCreateInfo?>
 
-class Renderer(private val engine: RendererEngine, private val isDebug: Boolean = true) {
-
-    companion object {
-        const val VK_EXT_DEBUG_UTILS_EXTENSION_NAME = "VK_EXT_debug_utils"
-
-        @JvmField
-        val DEBUG_LAYERS_STANDARD = listOf("VK_LAYER_KHRONOS_validation")
-
-        @JvmField
-        @Deprecated(
-            message = "This layer was deprecated by Khronos",
-            replaceWith = ReplaceWith(
-                "DEBUG_LAYERS_STANDARD",
-                "import org.aquila3d.core.renderer.Renderer.DEBUG_LAYERS_STANDARD"
-            )
-        )
-        val DEBUG_LAYERS_LUNARG_STANDARD = listOf("VK_LAYER_LUNARG_standard_validation")
-    }
-
+class Renderer(
+    private val engine: RendererEngine,
+    private val windowProvider: WindowProvider,
+    private val swapchainCreatorFactory: SwapchainCreatorFactory
+) : IRenderer {
     private val window: Window by lazy {
         Arbor.d("Creating window.")
-        val window = Window(800, 600, "Hello, Vulkan JVM")
+        val window = windowProvider.createWindow()
         engine.onAttachedToWindow(window)
         return@lazy window
     }
@@ -40,10 +30,16 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
     private val surface: Surface
     private val physicalDevice: VkPhysicalDevice
     private val logicalDevice: VkDevice
+    private val swapchainCreator: SwapchainCreator
+
+    private var swapchain: Swapchain?
 
     init {
         requiredInstanceExtensions.addAll(engine.requiredInstanceExtensions())
         val (layers, debugUtilsMessengerCreateInfo) = getDebugConfig()
+
+        //TODO: This feels like a bad early publication
+        engine.setRenderer(this)
 
         // Create the Vulkan instance
         Arbor.d("Creating Vulkan instance.")
@@ -52,34 +48,25 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
         val applicationInfo = VkApplicationInfo(makeVulkanVersion(1, 1, 0))
         instance = VkInstance(applicationInfo, requiredInstanceExtensions, layers, debugUtilsMessengerCreateInfo)
         Arbor.d("Creating surface.")
-        surface = engine.createSurface(instance, window)
+        surface = engine.createSurface(instance)
         Arbor.d("Selecting physical device.")
-        physicalDevice = engine.getDeviceSelector().select(surface, engine.requiredQueueFamilies(), engine.requiredDeviceExtensions())
+        physicalDevice = engine.getDeviceSelector()
+            .select(surface, engine.requiredQueueFamilies(), engine.requiredDeviceExtensions())
             ?: throw IllegalStateException("Failed to find an appropriate physical device.")
         Arbor.d("Creating logical device with extensions: %s", engine.requiredDeviceExtensions())
         logicalDevice = engine.createLogicalDevice(physicalDevice, engine.requiredDeviceExtensions())
-        Arbor.d("Creating swapchain")
-        engine.createSwapchain(physicalDevice)
+        Arbor.d("Creating swapchain creator")
+        swapchainCreator = swapchainCreatorFactory.creator(logicalDevice, physicalDevice, surface)
+
+        swapchain = swapchainCreator.createSwapchain(window)
     }
 
-    private fun getDebugConfig(): DebugConfig = if (isDebug) {
-        @Suppress("DEPRECATION")
-        when {
-            checkLayersAvailable(DEBUG_LAYERS_STANDARD) ->
-                DEBUG_LAYERS_STANDARD.toMutableList() to engine.configureDebug(requiredInstanceExtensions)
-            checkLayersAvailable(DEBUG_LAYERS_LUNARG_STANDARD) -> {
-                Arbor.w("The available Vulkan SDK appears to be outdated. Using deprecated validation layers.")
-                DEBUG_LAYERS_LUNARG_STANDARD.toMutableList() to engine.configureDebug(requiredInstanceExtensions)
-            }
-            else -> {
-                Arbor.e(
-                    "Unable to locate necessary debug layers. " +
-                            "The local machine likely does not have a Vulkan SDK installed."
-                )
-                mutableListOf<String>() to null
-            }
-        }
-    } else mutableListOf<String>() to null
+    override fun onWindowResized(width: Int, height: Int) {
+        window.onResized(width, height)
+        swapchain = swapchainCreator.recreateSwapchain(window, swapchain!!)
+    }
+
+    override fun getCurrentWindow(): Window = window
 
     fun start() {
         engine.startRenderLoop()
@@ -98,8 +85,8 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
     }
 
     fun destroy() {
-        Arbor.d("Stopping render loop.")
-        engine.stopRenderLoop()
+        Arbor.d("Destroying render engine.")
+        engine.destroy()
         Arbor.d("Destroying window.")
         window.destroy()
         Arbor.d("Destroying logical device.")
@@ -110,4 +97,39 @@ class Renderer(private val engine: RendererEngine, private val isDebug: Boolean 
         instance.destroy()
     }
 
+    private fun getDebugConfig(): DebugConfig = if (engine.isDebugMode()) {
+        @Suppress("DEPRECATION")
+        when {
+            checkLayersAvailable(DEBUG_LAYERS_STANDARD) ->
+                DEBUG_LAYERS_STANDARD.toMutableList() to engine.configureDebug(requiredInstanceExtensions)
+            checkLayersAvailable(DEBUG_LAYERS_LUNARG_STANDARD) -> {
+                Arbor.w("The available Vulkan SDK appears to be outdated. Using deprecated validation layers.")
+                DEBUG_LAYERS_LUNARG_STANDARD.toMutableList() to engine.configureDebug(requiredInstanceExtensions)
+            }
+            else -> {
+                Arbor.e(
+                    "Unable to locate necessary debug layers. " +
+                            "The local machine likely does not have a Vulkan SDK installed."
+                )
+                mutableListOf<String>() to null
+            }
+        }
+    } else mutableListOf<String>() to null
+
+    companion object {
+        const val VK_EXT_DEBUG_UTILS_EXTENSION_NAME = "VK_EXT_debug_utils"
+
+        @JvmField
+        val DEBUG_LAYERS_STANDARD = listOf("VK_LAYER_KHRONOS_validation")
+
+        @JvmField
+        @Deprecated(
+            message = "This layer was deprecated by Khronos",
+            replaceWith = ReplaceWith(
+                "DEBUG_LAYERS_STANDARD",
+                "import org.aquila3d.core.renderer.Renderer.DEBUG_LAYERS_STANDARD"
+            )
+        )
+        val DEBUG_LAYERS_LUNARG_STANDARD = listOf("VK_LAYER_LUNARG_standard_validation")
+    }
 }
