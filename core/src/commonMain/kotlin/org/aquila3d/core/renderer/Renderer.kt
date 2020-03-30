@@ -71,7 +71,8 @@ class Renderer(
                 deviceSelector::class.toString(),
                 VkQueueFamilies.VK_QUEUE_GRAPHICS
             )
-        graphicsCommandPool = VkCommandPool(logicalDevice, queueFamilyIndex)
+        graphicsCommandPool =
+            VkCommandPool(logicalDevice, queueFamilyIndex, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
     }
 
     override fun onWindowResized(width: Int, height: Int) {

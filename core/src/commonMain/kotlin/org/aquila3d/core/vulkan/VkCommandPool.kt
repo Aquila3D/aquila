@@ -7,6 +7,6 @@ package org.aquila3d.core.vulkan
  * commands on any command buffers allocated from the pool, as well as operations that allocate, free, and reset command
  * buffers or the pool itself.
  */
-expect class VkCommandPool(device: VkDevice, queueFamilyIndex: Int) {
+expect class VkCommandPool(device: VkDevice, queueFamilyIndex: Int, flags: Int) {
     fun destroy()
 }

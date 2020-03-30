@@ -12,7 +12,7 @@ import org.lwjgl.vulkan.VkCommandPoolCreateInfo
  * commands on any command buffers allocated from the pool, as well as operations that allocate, free, and reset command
  * buffers or the pool itself.
  */
-actual class VkCommandPool actual constructor(val device: VkDevice, val queueFamilyIndex: Int) {
+actual class VkCommandPool actual constructor(val device: VkDevice, val queueFamilyIndex: Int, val flags: Int) {
 
     val handle: Long
 
@@ -21,7 +21,7 @@ actual class VkCommandPool actual constructor(val device: VkDevice, val queueFam
             VkCommandPoolCreateInfo.calloc()
                 .sType(VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO)
                 .queueFamilyIndex(queueFamilyIndex)
-                .flags(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT).use { info ->
+                .flags(flags).use { info ->
                     val err = vkCreateCommandPool(device.handle, info, null, buffer)
                     if (err != VK_SUCCESS) {
                         throw AssertionError("Failed to create command pool: ${VkResult(err)}")

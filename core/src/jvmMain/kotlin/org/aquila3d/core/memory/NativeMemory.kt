@@ -1,5 +1,6 @@
 package org.aquila3d.core.memory
 
+import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryUtil.memFree
 import org.lwjgl.system.NativeResource
 import java.nio.Buffer
@@ -16,6 +17,14 @@ fun <T : NativeResource> T.use(func: (T) -> Unit) {
 fun <T : Buffer> T.use(func: (T) -> Unit) {
     try {
         func(this)
+    } finally {
+        memFree(this)
+    }
+}
+
+fun PointerBuffer.use(func: (PointerBuffer) -> Long): Long {
+    try {
+        return func(this)
     } finally {
         memFree(this)
     }
