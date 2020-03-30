@@ -3,10 +3,11 @@ package org.aquila3d.core.shader
 import org.aquila3d.core.io.ioResourceToByteBuffer
 import org.aquila3d.core.vulkan.VkDevice
 import org.aquila3d.core.vulkan.VkResult
+import org.aquila3d.core.vulkan.VkShaderModule
+import org.aquila3d.core.vulkan.VkShaderStageFlagBits
 import org.lwjgl.BufferUtils.createByteBuffer
 import org.lwjgl.system.MemoryStack
-import org.lwjgl.system.MemoryUtil.memFree
-import org.lwjgl.system.MemoryUtil.memUTF8
+import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.util.shaderc.Shaderc.*
 import org.lwjgl.util.shaderc.ShadercIncludeResolve
 import org.lwjgl.util.shaderc.ShadercIncludeResult
@@ -33,7 +34,7 @@ private fun vulkanStageToShadercKind(stage: Int): Int {
 }
 
 @Throws(IOException::class)
-fun glslToSpirv(classPath: String, vulkanStage: Int): ByteBuffer {
+fun glslToSpirv(classPath: String, stage: Int): ByteBuffer {
     val src: ByteBuffer = ioResourceToByteBuffer(classPath, 1024)
     val compiler: Long = shaderc_compiler_initialize()
     val options: Long = shaderc_compile_options_initialize()
@@ -69,7 +70,7 @@ fun glslToSpirv(classPath: String, vulkanStage: Int): ByteBuffer {
     var res = 0L
     MemoryStack.stackPush().use { stack ->
         res = shaderc_compile_into_spv(
-            compiler, src, vulkanStageToShadercKind(vulkanStage),
+            compiler, src, vulkanStageToShadercKind(stage),
             stack.UTF8(classPath), stack.UTF8("main"), options
         )
         if (res == 0L) throw AssertionError("Internal error during compilation!")
@@ -107,3 +108,26 @@ fun loadShader(
         .pSpecializationInfo(specInfo)
         .module(pShaderModule[0]).pName(stack.UTF8("main"))
 }
+
+@Throws(IOException::class)
+fun loadShader(classPath: String, device: VkDevice, stage: Int): VkShaderModule {
+    val shaderCode = glslToSpirv(classPath, stage)
+    return loadShader(shaderCode, device, stage)
+}
+
+@Throws(IOException::class)
+fun loadShader(byteCode: ByteBuffer, device: VkDevice, stage: Int): VkShaderModule {
+    val err: Int
+    val moduleCreateInfo = VkShaderModuleCreateInfo.calloc()
+        .sType(VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO)
+        .pCode(byteCode)
+    val pShaderModule = memAllocLong(1)
+    err = vkCreateShaderModule(device.handle, moduleCreateInfo, null, pShaderModule)
+    val shaderModule = pShaderModule[0]
+    memFree(pShaderModule)
+    if (err != VK_SUCCESS) {
+        throw AssertionError("Failed to create shader module: ${VkResult(err)}")
+    }
+    return VkShaderModule(shaderModule, VkShaderStageFlagBits.from(stage))
+}
+

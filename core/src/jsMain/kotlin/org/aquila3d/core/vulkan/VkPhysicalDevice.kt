@@ -14,4 +14,8 @@ actual class VkPhysicalDevice {
     actual fun getSwapchainFeatures(): SwapchainFeatures {
         TODO("Not yet implemented")
     }
+
+    actual fun getMemoryProperties(): VkPhysicalDeviceMemoryProperties {
+        TODO("Not yet implemented")
+    }
 }

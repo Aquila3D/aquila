@@ -14,14 +14,14 @@ import org.lwjgl.vulkan.VK11
 import org.lwjgl.vulkan.VkExtensionProperties
 import org.lwjgl.vulkan.VkQueueFamilyProperties
 
-actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDevice, private val surface: Surface) {
+actual class VkPhysicalDevice(internal val handle: org.lwjgl.vulkan.VkPhysicalDevice, private val surface: Surface) {
 
     private val queueFamilies: Map<VkQueueFamilies, Int> by lazy {
         val queueCountPointer = memAllocInt(1)
-        vkGetPhysicalDeviceQueueFamilyProperties(device, queueCountPointer, null)
+        vkGetPhysicalDeviceQueueFamilyProperties(handle, queueCountPointer, null)
         val queueCount = queueCountPointer.get(0)
         val queueProps = VkQueueFamilyProperties.calloc(queueCount)
-        vkGetPhysicalDeviceQueueFamilyProperties(device, queueCountPointer, queueProps)
+        vkGetPhysicalDeviceQueueFamilyProperties(handle, queueCountPointer, queueProps)
         memFree(queueCountPointer)
         val queueFamilies = mutableMapOf<VkQueueFamilies, Int>()
         val supportsPresent = memAllocInt(1)
@@ -45,7 +45,7 @@ actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDe
                 }
             }
             supportsPresent.position(0)
-            val err = vkGetPhysicalDeviceSurfaceSupportKHR(device, index, surface.surfaceHandle, supportsPresent)
+            val err = vkGetPhysicalDeviceSurfaceSupportKHR(handle, index, surface.surfaceHandle, supportsPresent)
             if (err != VK_SUCCESS) {
                 Arbor.e("Failed to physical device surface support: %s", VkResult(err))
             } else {
@@ -61,13 +61,13 @@ actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDe
 
     private val extensions: Map<String, Int> by lazy {
         val extensionCountPointer = memAllocInt(1)
-        var err = vkEnumerateDeviceExtensionProperties(device, null as String?, extensionCountPointer, null)
+        var err = vkEnumerateDeviceExtensionProperties(handle, null as String?, extensionCountPointer, null)
         if (err != VK_SUCCESS) {
             throw AssertionError("Failed to get number of physical device extensions: " + VkResult(err))
         }
         val extensionCount = extensionCountPointer.get(0)
         val extensionsPointer = VkExtensionProperties.calloc(extensionCount)
-        err = vkEnumerateDeviceExtensionProperties(device, null as String?, extensionCountPointer, extensionsPointer)
+        err = vkEnumerateDeviceExtensionProperties(handle, null as String?, extensionCountPointer, extensionsPointer)
         memFree(extensionCountPointer)
         if (err != VK_SUCCESS) {
             throw AssertionError("Failed to get physical device extensions: " + VkResult(err))
@@ -88,6 +88,26 @@ actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDe
         SwapchainFeatures(surfaceCapabilities, formats, presentationModes)
     }
 
+    private val memProperties: VkPhysicalDeviceMemoryProperties by lazy {
+        val memoryProperties = org.lwjgl.vulkan.VkPhysicalDeviceMemoryProperties.calloc()
+        vkGetPhysicalDeviceMemoryProperties(handle, memoryProperties)
+        val memoryTypes = mutableListOf<VkMemoryType>()
+        val memoryHeaps = mutableListOf<VkMemoryHeap>()
+        for (i in 0 until memoryProperties.memoryTypeCount()) {
+            val type = memoryProperties.memoryTypes(i)
+            val memoryType = VkMemoryType(type.propertyFlags(), type.heapIndex())
+            memoryTypes.add(memoryType)
+        }
+        for (i in 0 until memoryProperties.memoryHeapCount()) {
+            val heap = memoryProperties.memoryHeaps(i)
+            val memoryHeap = VkMemoryHeap(heap.size(), heap.flags())
+            memoryHeaps.add(memoryHeap)
+        }
+        val properties = VkPhysicalDeviceMemoryProperties(memoryTypes.toList(), memoryHeaps.toList())
+        memoryProperties.free()
+        properties
+    }
+
     actual fun getQueueFamilyIndices(): Map<VkQueueFamilies, Int> {
         return queueFamilies
     }
@@ -100,9 +120,13 @@ actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDe
         return swapFeatures
     }
 
+    actual fun getMemoryProperties(): VkPhysicalDeviceMemoryProperties {
+        return memProperties
+    }
+
     private fun getSurfaceCapabilities(): VkSurfaceCapabilitiesKHR {
         val surfCaps = org.lwjgl.vulkan.VkSurfaceCapabilitiesKHR.calloc()
-        val err = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface.surfaceHandle, surfCaps)
+        val err = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(handle, surface.surfaceHandle, surfCaps)
         if (err != VK_SUCCESS) {
             throw AssertionError("Failed to get physical device surface capabilities: ${VkResult(err)}")
         }
@@ -113,13 +137,13 @@ actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDe
 
     private fun getSurfaceFormats(): List<VkSurfaceFormatKHR> {
         val formatCountPointer = memAllocInt(1)
-        var err = vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface.surfaceHandle, formatCountPointer, null)
+        var err = vkGetPhysicalDeviceSurfaceFormatsKHR(handle, surface.surfaceHandle, formatCountPointer, null)
         val formatCount = formatCountPointer[0]
         if (err != VK_SUCCESS) {
             throw AssertionError("Failed to get number of physical device surface presentation modes: ${VkResult(err)}")
         }
         val formatsPointer = org.lwjgl.vulkan.VkSurfaceFormatKHR.calloc(formatCount)
-        err = vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface.surfaceHandle, formatCountPointer, formatsPointer)
+        err = vkGetPhysicalDeviceSurfaceFormatsKHR(handle, surface.surfaceHandle, formatCountPointer, formatsPointer)
         memFree(formatCountPointer)
         if (err != VK_SUCCESS) {
             throw AssertionError(
@@ -132,13 +156,13 @@ actual class VkPhysicalDevice(internal val device: org.lwjgl.vulkan.VkPhysicalDe
 
     private fun getPresentationModes(): List<VkPresentModeKHR> {
         val presentModeCountPointer = memAllocInt(1)
-        var err = vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface.surfaceHandle, presentModeCountPointer, null)
+        var err = vkGetPhysicalDeviceSurfacePresentModesKHR(handle, surface.surfaceHandle, presentModeCountPointer, null)
         val presentModeCount = presentModeCountPointer[0]
         if (err != VK_SUCCESS) {
             throw AssertionError("Failed to get number of physical device surface presentation modes: ${VkResult(err)}")
         }
         val pPresentModes = memAllocInt(presentModeCount)
-        err = vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface.surfaceHandle, presentModeCountPointer, pPresentModes)
+        err = vkGetPhysicalDeviceSurfacePresentModesKHR(handle, surface.surfaceHandle, presentModeCountPointer, pPresentModes)
         memFree(presentModeCountPointer)
         if (err != VK_SUCCESS) {
             throw AssertionError(

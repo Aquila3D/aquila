@@ -167,13 +167,13 @@ open class JvmRendererEngine(private val isDebug: Boolean) : RendererEngine {
             .ppEnabledLayerNames(null)
 
         val pDevice = memAllocPointer(1)
-        val err = vkCreateDevice(physicalDevice.device, deviceCreateInfo, null, pDevice)
+        val err = vkCreateDevice(physicalDevice.handle, deviceCreateInfo, null, pDevice)
         val device = pDevice[0]
         memFree(pDevice)
         if (err != VK_SUCCESS) {
             throw AssertionError("Failed to create device: " + VkResult(err))
         }
-        val logicalDevice = org.lwjgl.vulkan.VkDevice(device, physicalDevice.device, deviceCreateInfo)
+        val logicalDevice = org.lwjgl.vulkan.VkDevice(device, physicalDevice.handle, deviceCreateInfo)
         val retval = VkDevice(logicalDevice, physicalDevice, requiredQueueFamilies())
 
         // Cleanup the native memory

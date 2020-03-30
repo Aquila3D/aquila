@@ -15,4 +15,5 @@ expect class VkPhysicalDevice {
     fun getQueueFamilyIndices(): Map<VkQueueFamilies, Int>
     fun getDeviceExtensions(): Map<String, Int>
     fun getSwapchainFeatures(): SwapchainFeatures
+    fun getMemoryProperties(): VkPhysicalDeviceMemoryProperties
 }
