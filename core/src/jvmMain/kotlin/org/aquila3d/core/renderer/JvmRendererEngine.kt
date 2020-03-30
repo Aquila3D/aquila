@@ -12,6 +12,11 @@ import org.aquila3d.core.input.InputEventListener
 import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.surface.Window
 import org.aquila3d.core.vulkan.*
+import org.aquila3d.core.vulkan.debug.VkDebugUtilsMessengerCallback
+import org.aquila3d.core.vulkan.debug.VkDebugUtilsMessengerCallbackCreateInfo
+import org.aquila3d.core.vulkan.device.VkDevice
+import org.aquila3d.core.vulkan.device.VkPhysicalDevice
+import org.aquila3d.core.vulkan.device.VkQueueFamilies
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWKeyCallback
 import org.lwjgl.glfw.GLFWVulkan
@@ -106,7 +111,9 @@ open class JvmRendererEngine(private val isDebug: Boolean) : RendererEngine {
 
     override fun configureDebug(requiredExtensions: MutableList<String>): VkDebugUtilsMessengerCallbackCreateInfo {
         requiredExtensions.add(Renderer.VK_EXT_DEBUG_UTILS_EXTENSION_NAME)
-        return VkDebugUtilsMessengerCallbackCreateInfo(createDebugCallback())
+        return org.aquila3d.core.vulkan.debug.VkDebugUtilsMessengerCallbackCreateInfo(
+            createDebugCallback()
+        )
     }
 
     override fun getDeviceSelector(): DeviceSelector {
@@ -173,7 +180,11 @@ open class JvmRendererEngine(private val isDebug: Boolean) : RendererEngine {
             throw AssertionError("Failed to create device: " + VkResult(err))
         }
         val logicalDevice = org.lwjgl.vulkan.VkDevice(device, physicalDevice.handle, deviceCreateInfo)
-        val retval = VkDevice(logicalDevice, physicalDevice, requiredQueueFamilies())
+        val retval = org.aquila3d.core.vulkan.device.VkDevice(
+            logicalDevice,
+            physicalDevice,
+            requiredQueueFamilies()
+        )
 
         // Cleanup the native memory
         deviceCreateInfo.free()
@@ -231,7 +242,7 @@ open class JvmRendererEngine(private val isDebug: Boolean) : RendererEngine {
 
     @Suppress("MemberVisibilityCanBePrivate")
     protected fun createDebugCallback(): VkDebugUtilsMessengerCallback {
-        return VkDebugUtilsMessengerCallback()
+        return org.aquila3d.core.vulkan.debug.VkDebugUtilsMessengerCallback()
     }
 
     private suspend fun render() = withContext(renderThread.asCoroutineDispatcher()) {

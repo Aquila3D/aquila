@@ -1,9 +1,8 @@
 package org.aquila3d.core.device
 
 import org.aquila3d.core.surface.Surface
-import org.aquila3d.core.vulkan.VkInstance
-import org.aquila3d.core.vulkan.VkPhysicalDevice
-import org.aquila3d.core.vulkan.VkQueueFamilies
+import org.aquila3d.core.vulkan.device.VkPhysicalDevice
+import org.aquila3d.core.vulkan.device.VkQueueFamilies
 
 fun deviceSelectorError(message: String, selector: String, queueFamily: VkQueueFamilies): IllegalStateException {
     return IllegalStateException("$message Cause: missing ${queueFamily.simpleName} command queue family index. This is a " +

@@ -2,8 +2,8 @@ package org.aquila3d.core.device
 
 import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.vulkan.VkInstance
-import org.aquila3d.core.vulkan.VkPhysicalDevice
-import org.aquila3d.core.vulkan.VkQueueFamilies
+import org.aquila3d.core.vulkan.device.VkPhysicalDevice
+import org.aquila3d.core.vulkan.device.VkQueueFamilies
 import org.aquila3d.core.vulkan.VkResult
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.VK10.VK_SUCCESS

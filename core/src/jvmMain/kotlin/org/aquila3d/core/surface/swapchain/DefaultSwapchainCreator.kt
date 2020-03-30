@@ -4,6 +4,10 @@ import com.toxicbakery.logging.Arbor
 import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.surface.Window
 import org.aquila3d.core.vulkan.*
+import org.aquila3d.core.vulkan.VkFormat
+import org.aquila3d.core.vulkan.device.VkDevice
+import org.aquila3d.core.vulkan.device.VkPhysicalDevice
+import org.aquila3d.core.vulkan.device.VkQueueFamilies
 import org.aquila3d.core.vulkan.surface_khr.VkColorSpaceKHR
 import org.aquila3d.core.vulkan.surface_khr.VkPresentModeKHR
 import org.aquila3d.core.vulkan.surface_khr.VkSurfaceCapabilitiesKHR

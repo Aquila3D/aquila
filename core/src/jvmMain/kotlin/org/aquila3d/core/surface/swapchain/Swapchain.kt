@@ -1,6 +1,6 @@
 package org.aquila3d.core.surface.swapchain
 
-import org.aquila3d.core.vulkan.VkDevice
+import org.aquila3d.core.vulkan.device.VkDevice
 import org.aquila3d.core.vulkan.VkImage
 import org.aquila3d.core.vulkan.VkImageView
 import org.aquila3d.core.vulkan.VkResult

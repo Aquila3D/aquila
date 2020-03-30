@@ -1,6 +1,5 @@
 package org.aquila3d.core.vulkan
 
-@Suppress("unused")
 enum class VkFormat(val value: Int) {
     VK_FORMAT_UNDEFINED(0),
     VK_FORMAT_R4G4_UNORM_PACK8(1),
@@ -276,8 +275,7 @@ enum class VkFormat(val value: Int) {
     VK_FORMAT_G16_B16R16_2PLANE_420_UNORM_KHR(VK_FORMAT_G16_B16R16_2PLANE_420_UNORM.value),
     VK_FORMAT_G16_B16_R16_3PLANE_422_UNORM_KHR(VK_FORMAT_G16_B16_R16_3PLANE_422_UNORM.value),
     VK_FORMAT_G16_B16R16_2PLANE_422_UNORM_KHR(VK_FORMAT_G16_B16R16_2PLANE_422_UNORM.value),
-    VK_FORMAT_G16_B16_R16_3PLANE_444_UNORM_KHR(VK_FORMAT_G16_B16_R16_3PLANE_444_UNORM.value),
-    VK_FORMAT_MAX_ENUM(0x7FFFFFFF);
+    VK_FORMAT_G16_B16_R16_3PLANE_444_UNORM_KHR(VK_FORMAT_G16_B16_R16_3PLANE_444_UNORM.value);
 
     companion object {
         private val map = values().associateBy(VkFormat::value)

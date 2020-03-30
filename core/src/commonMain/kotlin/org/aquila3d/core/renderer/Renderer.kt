@@ -9,6 +9,12 @@ import org.aquila3d.core.surface.swapchain.Swapchain
 import org.aquila3d.core.surface.swapchain.SwapchainCreator
 import org.aquila3d.core.surface.swapchain.SwapchainCreatorFactory
 import org.aquila3d.core.vulkan.*
+import org.aquila3d.core.vulkan.command.VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
+import org.aquila3d.core.vulkan.command.VkCommandPool
+import org.aquila3d.core.vulkan.debug.VkDebugUtilsMessengerCallbackCreateInfo
+import org.aquila3d.core.vulkan.device.VkDevice
+import org.aquila3d.core.vulkan.device.VkPhysicalDevice
+import org.aquila3d.core.vulkan.device.VkQueueFamilies
 import kotlin.jvm.JvmField
 
 private typealias DebugConfig = Pair<MutableList<String>, VkDebugUtilsMessengerCallbackCreateInfo?>
@@ -72,7 +78,11 @@ class Renderer(
                 VkQueueFamilies.VK_QUEUE_GRAPHICS
             )
         graphicsCommandPool =
-            VkCommandPool(logicalDevice, queueFamilyIndex, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT)
+            VkCommandPool(
+                logicalDevice,
+                queueFamilyIndex,
+                VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
+            )
     }
 
     override fun onWindowResized(width: Int, height: Int) {

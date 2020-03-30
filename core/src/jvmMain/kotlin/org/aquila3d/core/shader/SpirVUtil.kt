@@ -1,10 +1,10 @@
 package org.aquila3d.core.shader
 
 import org.aquila3d.core.io.ioResourceToByteBuffer
-import org.aquila3d.core.vulkan.VkDevice
+import org.aquila3d.core.vulkan.device.VkDevice
 import org.aquila3d.core.vulkan.VkResult
-import org.aquila3d.core.vulkan.VkShaderModule
-import org.aquila3d.core.vulkan.VkShaderStageFlagBits
+import org.aquila3d.core.vulkan.shader.VkShaderModule
+import org.aquila3d.core.vulkan.shader.VkShaderStageFlagBits
 import org.lwjgl.BufferUtils.createByteBuffer
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil.*
@@ -128,6 +128,9 @@ fun loadShader(byteCode: ByteBuffer, device: VkDevice, stage: Int): VkShaderModu
     if (err != VK_SUCCESS) {
         throw AssertionError("Failed to create shader module: ${VkResult(err)}")
     }
-    return VkShaderModule(shaderModule, VkShaderStageFlagBits.from(stage))
+    return VkShaderModule(
+        shaderModule,
+        VkShaderStageFlagBits.from(stage)
+    )
 }
 
