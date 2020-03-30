@@ -7,7 +7,11 @@ package org.aquila3d.core.vulkan
  * commands on any command buffers allocated from the pool, as well as operations that allocate, free, and reset command
  * buffers or the pool itself.
  */
-actual class VkCommandPool actual constructor(device: VkDevice, queueFamilyIndex: Int) {
+actual class VkCommandPool actual constructor(
+    device: VkDevice,
+    queueFamilyIndex: Int,
+    flags: Int
+) {
     actual fun destroy() {
     }
 }
