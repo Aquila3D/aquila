@@ -103,19 +103,16 @@ actual class VkPhysicalDevice(internal val handle: org.lwjgl.vulkan.VkPhysicalDe
     private val memProperties: VkPhysicalDeviceMemoryProperties by lazy {
         val memoryProperties = org.lwjgl.vulkan.VkPhysicalDeviceMemoryProperties.calloc()
         vkGetPhysicalDeviceMemoryProperties(handle, memoryProperties)
-        val memoryTypes = mutableListOf<VkMemoryType>()
-        val memoryHeaps = mutableListOf<VkMemoryHeap>()
-        for (i in 0 until memoryProperties.memoryTypeCount()) {
-            val type = memoryProperties.memoryTypes(i)
-            val memoryType =
+        val memoryTypes = (0..memoryProperties.memoryTypeCount())
+            .map { idx ->
+                val type = memoryProperties.memoryTypes(idx)
                 VkMemoryType(type.propertyFlags(), type.heapIndex())
-            memoryTypes.add(memoryType)
-        }
-        for (i in 0 until memoryProperties.memoryHeapCount()) {
-            val heap = memoryProperties.memoryHeaps(i)
-            val memoryHeap = VkMemoryHeap(heap.size(), heap.flags())
-            memoryHeaps.add(memoryHeap)
-        }
+            }
+        val memoryHeaps = (0..memoryProperties.memoryHeapCount())
+            .map { idx ->
+                val heap = memoryProperties.memoryHeaps(idx)
+                VkMemoryHeap(heap.size(), heap.flags())
+            }
         val properties = VkPhysicalDeviceMemoryProperties(
             memoryTypes.toList(),
             memoryHeaps.toList()
