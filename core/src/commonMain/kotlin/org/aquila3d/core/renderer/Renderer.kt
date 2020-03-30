@@ -68,7 +68,7 @@ class Renderer(
         val queueFamilyIndex = physicalDevice.getQueueFamilyIndices()[VkQueueFamilies.VK_QUEUE_GRAPHICS]
             ?: throw deviceSelectorError(
                 "Unable to create command pool.",
-                deviceSelector,
+                deviceSelector::class.toString(),
                 VkQueueFamilies.VK_QUEUE_GRAPHICS
             )
         graphicsCommandPool = VkCommandPool(logicalDevice, queueFamilyIndex)
