@@ -17,6 +17,14 @@ actual class Window actual constructor(
         )
     )
 
+    actual fun getWidth(): Int {
+        TODO("Not yet implemented")
+    }
+
+    actual fun getHeight(): Int {
+        TODO("Not yet implemented")
+    }
+
     actual fun destroy() {
     }
 

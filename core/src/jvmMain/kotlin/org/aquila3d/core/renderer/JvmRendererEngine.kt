@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
 
-open class JvmRendererEngine : RendererEngine {
+open class JvmRendererEngine(private val isDebug: Boolean) : RendererEngine {
 
     private val eventListeners: MutableSet<InputEventListener> = ConcurrentHashMap.newKeySet()
 
@@ -36,12 +36,13 @@ open class JvmRendererEngine : RendererEngine {
 
     private val requiredQueueFamilies = listOf(VkQueueFamilies.VK_QUEUE_GRAPHICS, VkQueueFamilies.VK_QUEUE_PRESENTATION)
 
-    private val instanceExtensions: MutableList<String> // Can't initialize this here because it must be after GLFW is initialized
+    // Can't initialize this here because it must be after GLFW is initialized
+    private val instanceExtensions: MutableList<String>
 
     @Volatile
     private var shouldRender = false
 
-    private lateinit var window: Window
+    private lateinit var renderer: IRenderer
 
     private val glfwKeyCallback: GLFWKeyCallback by lazy {
         object : GLFWKeyCallback() {
@@ -60,17 +61,15 @@ open class JvmRendererEngine : RendererEngine {
 
     // Handle canvas resize
     private val glfwWindowSizeCallback: GLFWWindowSizeCallback by lazy {
-        val callback = object : GLFWWindowSizeCallback() {
+        return@lazy object : GLFWWindowSizeCallback() {
             override fun invoke(window: Long, width: Int, height: Int) {
                 Arbor.d("Window Resize: [WxH] = [%dx%d]", width, height)
                 if (width <= 0 || height <= 0) {
                     return
                 }
-                this@JvmRendererEngine.window.onResized(width, height)
+                renderer.onWindowResized(width, height)
             }
-
         }
-        return@lazy callback
     }
 
     init {
@@ -82,6 +81,14 @@ open class JvmRendererEngine : RendererEngine {
         }
         Arbor.d("GLFW Initialized.")
         instanceExtensions = getRequiredInstanceExtensions()
+    }
+
+    override fun setRenderer(renderer: IRenderer) {
+        this.renderer = renderer
+    }
+
+    override fun isDebugMode(): Boolean {
+        return isDebug
     }
 
     override fun requiredInstanceExtensions(): List<String> {
@@ -105,9 +112,9 @@ open class JvmRendererEngine : RendererEngine {
         return FirstDeviceSelector()
     }
 
-    override fun createSurface(instance: VkInstance, window: Window): Surface {
+    override fun createSurface(instance: VkInstance): Surface {
         val pSurface = memAllocLong(1)
-        val err = glfwCreateWindowSurface(instance.instance, window.window, null, pSurface)
+        val err = glfwCreateWindowSurface(instance.instance, renderer.getCurrentWindow().window, null, pSurface)
         val surface = pSurface[0]
         memFree(pSurface) // Cleanup the native memory
         if (err != VK_SUCCESS) {
@@ -180,7 +187,6 @@ open class JvmRendererEngine : RendererEngine {
     }
 
     override fun onAttachedToWindow(window: Window) {
-        this.window = window
         glfwSetKeyCallback(window.window, glfwKeyCallback)
         glfwSetWindowSizeCallback(window.window, glfwWindowSizeCallback)
     }
@@ -195,15 +201,15 @@ open class JvmRendererEngine : RendererEngine {
 
     override fun startRenderLoop() {
         runBlocking {
-            async { render() }
-            while (!glfwWindowShouldClose(window.window)) {
+            val deferred = async { render() }
+            while (!glfwWindowShouldClose(renderer.getCurrentWindow().window)) {
                 // Handle window messages. Resize events happen exactly here.
                 // So it is safe to use the new swapchain images and framebuffers afterwards.
                 glfwPollEvents()
                 delay(16) // 60 Hz, this is temporary for now
             }
             stopRenderLoop()
-
+            deferred.await()
         }
     }
 
@@ -218,6 +224,10 @@ open class JvmRendererEngine : RendererEngine {
 
     override fun pauseRenderLoop() {
         shouldRender = false
+    }
+
+    override fun destroy() {
+        stopRenderLoop()
     }
 
     @Suppress("MemberVisibilityCanBePrivate")

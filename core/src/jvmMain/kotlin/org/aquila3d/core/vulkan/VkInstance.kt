@@ -84,7 +84,6 @@ actual class VkInstance actual constructor(
         val localCapabilities = instance.capabilities
         TODO("Not yet implemented")
     }
-
 }
 
 internal actual fun getRequiredInstanceExtensions(): MutableList<String> {

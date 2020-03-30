@@ -2,10 +2,12 @@ package org.aquila3d.core.surface
 
 import org.lwjgl.glfw.GLFW.*
 
-
 actual class Window actual constructor(width: Int, height: Int, title: String) {
 
     internal val window: Long
+
+    private var width: Int
+    private var height: Int
 
     init {
         // Configure GLFW
@@ -19,18 +21,27 @@ actual class Window actual constructor(width: Int, height: Int, title: String) {
         if (window == 0L) {
             throw RuntimeException("Failed to create the GLFW window")
         }
+        this.width = width
+        this.height = height
 
         glfwShowWindow(window)
+    }
+
+    actual fun getWidth(): Int {
+        return width
+    }
+
+    actual fun getHeight(): Int {
+        return height
+    }
+
+    actual fun onResized(width: Int, height: Int) {
+        this.width = width
+        this.height = height
     }
 
     actual fun destroy() {
         glfwDestroyWindow(window)
         glfwTerminate()
-    }
-
-    actual fun onResized(width: Int, height: Int) {
-        /*TriangleDemo.width = width
-        TriangleDemo.height = height
-        swapchainRecreator.mustRecreate = true*/
     }
 }

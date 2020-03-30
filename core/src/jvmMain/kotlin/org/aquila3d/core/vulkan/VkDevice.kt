@@ -6,7 +6,7 @@ import org.lwjgl.vulkan.VK10.vkDestroyDevice
 import org.lwjgl.vulkan.VK10.vkGetDeviceQueue
 
 actual class VkDevice(
-    internal val device: org.lwjgl.vulkan.VkDevice,
+    internal val handle: org.lwjgl.vulkan.VkDevice,
     physicalDevice: VkPhysicalDevice,
     queueFamilies: List<VkQueueFamilies>
 ) {
@@ -16,13 +16,16 @@ actual class VkDevice(
     init {
         for (family in queueFamilies) {
             val pQueue = memAllocPointer(1)
+            val familyIndex = physicalDevice.getQueueFamilyIndices()[family]
             vkGetDeviceQueue(
-                device, physicalDevice.getQueueFamilyIndices()[family]
-                    ?: error("No queue for type $family found"), 0, pQueue
+                handle,
+                familyIndex ?: error("No queue for type $family found"),
+                0,
+                pQueue
             )
             val queue = pQueue[0]
             memFree(pQueue)
-            val commandQueue = org.lwjgl.vulkan.VkQueue(queue, device)
+            val commandQueue = org.lwjgl.vulkan.VkQueue(queue, handle)
             commandQueues[family] = VkQueue(commandQueue)
         }
     }
@@ -32,6 +35,6 @@ actual class VkDevice(
     }
 
     actual fun destroy() {
-        vkDestroyDevice(device, null)
+        vkDestroyDevice(handle, null)
     }
 }
