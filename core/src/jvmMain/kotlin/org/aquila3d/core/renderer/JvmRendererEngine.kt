@@ -136,7 +136,7 @@ open class JvmRendererEngine(private val isDebug: Boolean) : RendererEngine {
                 .pQueuePriorities(pQueuePriorities)
         } ?: throw deviceSelectorError(
             "Unable to create logical device.",
-            getDeviceSelector(),
+            getDeviceSelector()::class.qualifiedName ?: "Unknown",
             VkQueueFamilies.VK_QUEUE_GRAPHICS
         )
         physicalDevice.getQueueFamilyIndices()[VkQueueFamilies.VK_QUEUE_PRESENTATION]?.let {
@@ -145,7 +145,7 @@ open class JvmRendererEngine(private val isDebug: Boolean) : RendererEngine {
                 .pQueuePriorities(pQueuePriorities)
         } ?: throw deviceSelectorError(
             "Unable to create logical device.",
-            getDeviceSelector(),
+            getDeviceSelector()::class.qualifiedName ?: "Unknown",
             VkQueueFamilies.VK_QUEUE_PRESENTATION
         )
 

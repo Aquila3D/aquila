@@ -14,6 +14,14 @@ fun <T : NativeResource> T.use(func: (T) -> Unit) {
     }
 }
 
+fun <T : NativeResource> T.useAndGet(func: (T) -> Long): Long {
+    try {
+        return func(this)
+    } finally {
+        free()
+    }
+}
+
 fun <T : Buffer> T.use(func: (T) -> Unit) {
     try {
         func(this)
@@ -22,7 +30,15 @@ fun <T : Buffer> T.use(func: (T) -> Unit) {
     }
 }
 
-fun PointerBuffer.use(func: (PointerBuffer) -> Long): Long {
+fun PointerBuffer.use(func: (PointerBuffer) -> Unit) {
+    try {
+        return func(this)
+    } finally {
+        memFree(this)
+    }
+}
+
+fun PointerBuffer.useAndGet(func: (PointerBuffer) -> Long): Long {
     try {
         return func(this)
     } finally {
