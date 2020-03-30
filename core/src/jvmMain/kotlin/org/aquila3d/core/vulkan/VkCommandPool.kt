@@ -2,7 +2,6 @@ package org.aquila3d.core.vulkan
 
 import org.aquila3d.core.memory.useAndGet
 import org.lwjgl.system.MemoryUtil.memAllocLong
-import org.lwjgl.system.MemoryUtil.memFree
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkCommandPoolCreateInfo
 

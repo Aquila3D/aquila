@@ -2,13 +2,13 @@ package org.aquila3d.core.vulkan
 
 import org.aquila3d.core.surface.swapchain.SwapchainFeatures
 
-enum class VkQueueFamilies {
-    VK_QUEUE_GRAPHICS,
-    VK_QUEUE_COMPUTE,
-    VK_QUEUE_TRANSFER,
-    VK_QUEUE_SPARSE_BINDING,
-    VK_QUEUE_PROTECTED,
-    VK_QUEUE_PRESENTATION
+enum class VkQueueFamilies(val simpleName: String) {
+    VK_QUEUE_GRAPHICS("Graphics"),
+    VK_QUEUE_COMPUTE("Compute"),
+    VK_QUEUE_TRANSFER("Transfer"),
+    VK_QUEUE_SPARSE_BINDING("Sparse Binding"),
+    VK_QUEUE_PROTECTED("Protected"),
+    VK_QUEUE_PRESENTATION("Presentation")
 }
 
 expect class VkPhysicalDevice {

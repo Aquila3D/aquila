@@ -4,6 +4,7 @@ import com.toxicbakery.logging.Arbor
 import kotlinx.coroutines.*
 import org.aquila3d.core.device.DeviceSelector
 import org.aquila3d.core.device.FirstDeviceSelector
+import org.aquila3d.core.device.deviceSelectorError
 import org.aquila3d.core.input.Event
 import org.aquila3d.core.input.EventSource
 import org.aquila3d.core.input.InputEvent
@@ -133,21 +134,19 @@ open class JvmRendererEngine(private val isDebug: Boolean) : RendererEngine {
             queueCreateInfo[0].sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
                 .queueFamilyIndex(it)
                 .pQueuePriorities(pQueuePriorities)
-        } ?: throw IllegalStateException(
-            "Unable to create logical device due to missing graphics command queue family index. This is a bug " +
-                    "in the used DeviceSelector (${getDeviceSelector()::class.qualifiedName}) as the selected " +
-                    "VkPhysicalDevice does not support a required queue family. If you are using a library " +
-                    "provided DeviceSelector, please report this at https://github.com/Aquila3D/aquila/issues"
+        } ?: throw deviceSelectorError(
+            "Unable to create logical device.",
+            getDeviceSelector(),
+            VkQueueFamilies.VK_QUEUE_GRAPHICS
         )
         physicalDevice.getQueueFamilyIndices()[VkQueueFamilies.VK_QUEUE_PRESENTATION]?.let {
             queueCreateInfo[1].sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
                 .queueFamilyIndex(it)
                 .pQueuePriorities(pQueuePriorities)
-        } ?: throw IllegalStateException(
-            "Unable to create logical device due to missing presentation command queue family index. This is a bug " +
-                    "in the used DeviceSelector (${getDeviceSelector()::class.qualifiedName}) as the selected " +
-                    "VkPhysicalDevice does not support a required queue family. If you are using a library " +
-                    "provided DeviceSelector, please report this at https://github.com/Aquila3D/aquila/issues"
+        } ?: throw deviceSelectorError(
+            "Unable to create logical device.",
+            getDeviceSelector(),
+            VkQueueFamilies.VK_QUEUE_PRESENTATION
         )
 
         // Prepare te extension loading information

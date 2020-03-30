@@ -68,7 +68,6 @@ open class DefaultSwapchainCreator(
         val capabilities = swapchainFeatures.capabilities
         val surfaceFormat = chooseSurfaceFormat(swapchainFeatures.formats)
         val presentationMode = choosePresentationMode(swapchainFeatures.presentMode)
-        val swapExtent = chooseSwapExtent(window, swapchainFeatures.capabilities)
 
         var numberOfSwapchainImages = swapchainFeatures.capabilities.minImageCount() + 1
         @Suppress("ConvertTwoComparisonsToRangeCheck")

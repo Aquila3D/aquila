@@ -25,7 +25,7 @@ interface RendererEngine {
     fun createSurface(instance: VkInstance): Surface
 
     fun createLogicalDevice(physicalDevice: VkPhysicalDevice, requiredExtensions: List<String>): VkDevice
-
+    
     fun onAttachedToWindow(window: Window)
 
     fun registerInputEventListener(listener: InputEventListener)

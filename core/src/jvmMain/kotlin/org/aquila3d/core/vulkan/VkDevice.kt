@@ -7,7 +7,7 @@ import org.lwjgl.vulkan.VK10.vkGetDeviceQueue
 
 actual class VkDevice(
     internal val handle: org.lwjgl.vulkan.VkDevice,
-    physicalDevice: VkPhysicalDevice,
+    val physicalDevice: VkPhysicalDevice,
     queueFamilies: List<VkQueueFamilies>
 ) {
 
