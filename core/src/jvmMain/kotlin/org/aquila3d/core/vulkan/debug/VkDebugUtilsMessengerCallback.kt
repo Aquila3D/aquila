@@ -1,4 +1,4 @@
-package org.aquila3d.core.vulkan
+package org.aquila3d.core.vulkan.debug
 
 import com.toxicbakery.logging.Arbor
 import org.lwjgl.vulkan.EXTDebugUtils.*
@@ -25,7 +25,7 @@ actual open class VkDebugUtilsMessengerCallback {
             }
         }
         val data = VkDebugUtilsMessengerCallbackDataEXT.create(pCallbackData)
-        val message = String.format("%s: %s\n", type, data.pMessageString())
+        val message = String.format("%s: [%s] %s\n", type, pUserData, data.pMessageString())
         when (messageSeverity) {
             VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT -> {
                 Arbor.v(message)

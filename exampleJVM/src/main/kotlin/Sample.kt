@@ -10,8 +10,8 @@ import org.aquila3d.core.surface.WindowProvider
 import org.aquila3d.core.surface.swapchain.DefaultSwapchainCreator
 import org.aquila3d.core.surface.swapchain.SwapchainCreator
 import org.aquila3d.core.surface.swapchain.SwapchainCreatorFactory
-import org.aquila3d.core.vulkan.VkDevice
-import org.aquila3d.core.vulkan.VkPhysicalDevice
+import org.aquila3d.core.vulkan.device.VkDevice
+import org.aquila3d.core.vulkan.device.VkPhysicalDevice
 
 private val windowProvider = object: WindowProvider {
     override fun createWindow(): Window {

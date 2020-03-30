@@ -4,6 +4,10 @@ import com.toxicbakery.logging.Arbor
 import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.surface.Window
 import org.aquila3d.core.vulkan.*
+import org.aquila3d.core.vulkan.VkFormat
+import org.aquila3d.core.vulkan.device.VkDevice
+import org.aquila3d.core.vulkan.device.VkPhysicalDevice
+import org.aquila3d.core.vulkan.device.VkQueueFamilies
 import org.aquila3d.core.vulkan.surface_khr.VkColorSpaceKHR
 import org.aquila3d.core.vulkan.surface_khr.VkPresentModeKHR
 import org.aquila3d.core.vulkan.surface_khr.VkSurfaceCapabilitiesKHR
@@ -15,13 +19,8 @@ import org.lwjgl.vulkan.KHRSurface
 import org.lwjgl.vulkan.KHRSurface.VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
 import org.lwjgl.vulkan.KHRSwapchain
 import org.lwjgl.vulkan.KHRSwapchain.vkCreateSwapchainKHR
-import org.lwjgl.vulkan.VK10
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkSwapchainCreateInfoKHR
-import java.nio.IntBuffer
-import kotlin.math.max
-import kotlin.math.min
-
 
 open class DefaultSwapchainCreator(
     device: VkDevice,
@@ -73,7 +72,6 @@ open class DefaultSwapchainCreator(
         val capabilities = swapchainFeatures.capabilities
         val surfaceFormat = chooseSurfaceFormat(swapchainFeatures.formats)
         val presentationMode = choosePresentationMode(swapchainFeatures.presentMode)
-        val swapExtent = chooseSwapExtent(window, swapchainFeatures.capabilities)
 
         var numberOfSwapchainImages = swapchainFeatures.capabilities.minImageCount() + 1
         @Suppress("ConvertTwoComparisonsToRangeCheck")

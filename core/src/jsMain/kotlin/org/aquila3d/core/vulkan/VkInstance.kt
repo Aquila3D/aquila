@@ -1,5 +1,7 @@
 package org.aquila3d.core.vulkan
 
+import org.aquila3d.core.vulkan.debug.VkDebugUtilsMessengerCallbackCreateInfo
+
 actual class VkInstance actual constructor(
     applicationInfo: VkApplicationInfo,
     requiredExtensions: List<String>,

@@ -1,6 +1,7 @@
 package org.aquila3d.core.renderer
 
 import com.toxicbakery.logging.Arbor
+import org.aquila3d.core.device.deviceSelectorError
 import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.surface.Window
 import org.aquila3d.core.surface.WindowProvider
@@ -8,6 +9,12 @@ import org.aquila3d.core.surface.swapchain.Swapchain
 import org.aquila3d.core.surface.swapchain.SwapchainCreator
 import org.aquila3d.core.surface.swapchain.SwapchainCreatorFactory
 import org.aquila3d.core.vulkan.*
+import org.aquila3d.core.vulkan.command.VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
+import org.aquila3d.core.vulkan.command.VkCommandPool
+import org.aquila3d.core.vulkan.debug.VkDebugUtilsMessengerCallbackCreateInfo
+import org.aquila3d.core.vulkan.device.VkDevice
+import org.aquila3d.core.vulkan.device.VkPhysicalDevice
+import org.aquila3d.core.vulkan.device.VkQueueFamilies
 import kotlin.jvm.JvmField
 
 private typealias DebugConfig = Pair<MutableList<String>, VkDebugUtilsMessengerCallbackCreateInfo?>
@@ -34,6 +41,8 @@ class Renderer(
 
     private var swapchain: Swapchain?
 
+    private val graphicsCommandPool: VkCommandPool
+
     init {
         requiredInstanceExtensions.addAll(engine.requiredInstanceExtensions())
         val (layers, debugUtilsMessengerCreateInfo) = getDebugConfig()
@@ -50,15 +59,30 @@ class Renderer(
         Arbor.d("Creating surface.")
         surface = engine.createSurface(instance)
         Arbor.d("Selecting physical device.")
-        physicalDevice = engine.getDeviceSelector()
-            .select(surface, engine.requiredQueueFamilies(), engine.requiredDeviceExtensions())
-            ?: throw IllegalStateException("Failed to find an appropriate physical device.")
+        val deviceSelector = engine.getDeviceSelector()
+        physicalDevice =
+            deviceSelector.select(surface, engine.requiredQueueFamilies(), engine.requiredDeviceExtensions())
+                ?: throw IllegalStateException("Failed to find an appropriate physical device.")
         Arbor.d("Creating logical device with extensions: %s", engine.requiredDeviceExtensions())
         logicalDevice = engine.createLogicalDevice(physicalDevice, engine.requiredDeviceExtensions())
         Arbor.d("Creating swapchain creator")
         swapchainCreator = swapchainCreatorFactory.creator(logicalDevice, physicalDevice, surface)
 
         swapchain = swapchainCreator.createSwapchain(window)
+
+        Arbor.d("Creating command pool.")
+        val queueFamilyIndex = physicalDevice.getQueueFamilyIndices()[VkQueueFamilies.VK_QUEUE_GRAPHICS]
+            ?: throw deviceSelectorError(
+                "Unable to create command pool.",
+                deviceSelector::class.toString(),
+                VkQueueFamilies.VK_QUEUE_GRAPHICS
+            )
+        graphicsCommandPool =
+            VkCommandPool(
+                logicalDevice,
+                queueFamilyIndex,
+                VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
+            )
     }
 
     override fun onWindowResized(width: Int, height: Int) {
@@ -91,6 +115,8 @@ class Renderer(
         window.destroy()
         Arbor.d("Destroying swapchain")
         swapchain?.destroy()
+        Arbor.d("Destroying graphics command pool")
+        graphicsCommandPool.destroy()
         Arbor.d("Destroying logical device.")
         logicalDevice.destroy()
         Arbor.d("Destroying surface.")

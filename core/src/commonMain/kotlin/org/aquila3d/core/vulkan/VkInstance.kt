@@ -1,5 +1,7 @@
 package org.aquila3d.core.vulkan
 
+import org.aquila3d.core.vulkan.debug.VkDebugUtilsMessengerCallbackCreateInfo
+
 internal expect fun getRequiredInstanceExtensions(): MutableList<String>
 
 expect class VkInstance(

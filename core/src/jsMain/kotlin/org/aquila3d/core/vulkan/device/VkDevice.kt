@@ -1,4 +1,7 @@
-package org.aquila3d.core.vulkan
+package org.aquila3d.core.vulkan.device
+
+import org.aquila3d.core.vulkan.command.VkQueue
+import org.aquila3d.core.vulkan.device.VkQueueFamilies
 
 actual class VkDevice {
 

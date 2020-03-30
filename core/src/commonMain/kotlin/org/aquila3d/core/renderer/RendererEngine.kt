@@ -5,6 +5,10 @@ import org.aquila3d.core.input.InputEventListener
 import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.surface.Window
 import org.aquila3d.core.vulkan.*
+import org.aquila3d.core.vulkan.debug.VkDebugUtilsMessengerCallbackCreateInfo
+import org.aquila3d.core.vulkan.device.VkDevice
+import org.aquila3d.core.vulkan.device.VkPhysicalDevice
+import org.aquila3d.core.vulkan.device.VkQueueFamilies
 
 interface RendererEngine {
 
@@ -25,7 +29,7 @@ interface RendererEngine {
     fun createSurface(instance: VkInstance): Surface
 
     fun createLogicalDevice(physicalDevice: VkPhysicalDevice, requiredExtensions: List<String>): VkDevice
-
+    
     fun onAttachedToWindow(window: Window)
 
     fun registerInputEventListener(listener: InputEventListener)

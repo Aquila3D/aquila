@@ -1,6 +1,7 @@
 package org.aquila3d.core.vulkan
 
 import com.toxicbakery.logging.Arbor
+import org.aquila3d.core.vulkan.debug.VkDebugUtilsMessengerCallbackCreateInfo
 import org.lwjgl.glfw.GLFWVulkan.glfwGetRequiredInstanceExtensions
 import org.lwjgl.system.MemoryUtil.*
 import org.lwjgl.vulkan.EXTDebugUtils.vkCreateDebugUtilsMessengerEXT

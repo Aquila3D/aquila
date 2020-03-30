@@ -2,8 +2,8 @@ package org.aquila3d.core.surface.swapchain
 
 import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.surface.Window
-import org.aquila3d.core.vulkan.VkDevice
-import org.aquila3d.core.vulkan.VkPhysicalDevice
+import org.aquila3d.core.vulkan.device.VkDevice
+import org.aquila3d.core.vulkan.device.VkPhysicalDevice
 
 abstract class SwapchainCreator(val device: VkDevice, val physicalDevice: VkPhysicalDevice, val surface: Surface) {
 

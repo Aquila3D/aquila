@@ -1,7 +1,7 @@
-package org.aquila3d.core.vulkan
+package org.aquila3d.core.vulkan.debug
 
+import org.aquila3d.core.vulkan.debug.VkDebugUtilsMessengerCallback
 import org.lwjgl.system.MemoryUtil.NULL
-import org.lwjgl.vulkan.EXTDebugUtils
 import org.lwjgl.vulkan.EXTDebugUtils.*
 import org.lwjgl.vulkan.VkDebugUtilsMessengerCreateInfoEXT
 

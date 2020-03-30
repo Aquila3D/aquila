@@ -60,12 +60,14 @@ kotlin {
             implementation("org.lwjgl:lwjgl-stb:$lwjglVersion")
             implementation("org.lwjgl:lwjgl-vma:$lwjglVersion")
             implementation("org.lwjgl:lwjgl-vulkan:$lwjglVersion")
+            implementation("org.lwjgl:lwjgl-shaderc:$lwjglVersion")
             runtimeOnly("org.lwjgl:lwjgl:$lwjglVersion:$lwjglNatives")
             runtimeOnly("org.lwjgl:lwjgl-assimp:$lwjglVersion:$lwjglNatives")
             runtimeOnly("org.lwjgl:lwjgl-glfw:$lwjglVersion:$lwjglNatives")
             runtimeOnly("org.lwjgl:lwjgl-openal:$lwjglVersion:$lwjglNatives")
             runtimeOnly("org.lwjgl:lwjgl-stb:$lwjglVersion:$lwjglNatives")
             runtimeOnly("org.lwjgl:lwjgl-vma:$lwjglVersion:$lwjglNatives")
+            runtimeOnly("org.lwjgl:lwjgl-shaderc:$lwjglVersion:$lwjglNatives")
             if (lwjglNatives == "natives-macos") {
                 runtimeOnly("org.lwjgl:lwjgl-vulkan:$lwjglVersion:$lwjglNatives")
             }

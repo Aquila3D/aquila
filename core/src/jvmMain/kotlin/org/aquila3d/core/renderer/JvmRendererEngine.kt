@@ -4,6 +4,7 @@ import com.toxicbakery.logging.Arbor
 import kotlinx.coroutines.*
 import org.aquila3d.core.device.DeviceSelector
 import org.aquila3d.core.device.FirstDeviceSelector
+import org.aquila3d.core.device.deviceSelectorError
 import org.aquila3d.core.input.Event
 import org.aquila3d.core.input.EventSource
 import org.aquila3d.core.input.InputEvent
@@ -11,6 +12,11 @@ import org.aquila3d.core.input.InputEventListener
 import org.aquila3d.core.surface.Surface
 import org.aquila3d.core.surface.Window
 import org.aquila3d.core.vulkan.*
+import org.aquila3d.core.vulkan.debug.VkDebugUtilsMessengerCallback
+import org.aquila3d.core.vulkan.debug.VkDebugUtilsMessengerCallbackCreateInfo
+import org.aquila3d.core.vulkan.device.VkDevice
+import org.aquila3d.core.vulkan.device.VkPhysicalDevice
+import org.aquila3d.core.vulkan.device.VkQueueFamilies
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWKeyCallback
 import org.lwjgl.glfw.GLFWVulkan
@@ -105,7 +111,9 @@ open class JvmRendererEngine(private val isDebug: Boolean) : RendererEngine {
 
     override fun configureDebug(requiredExtensions: MutableList<String>): VkDebugUtilsMessengerCallbackCreateInfo {
         requiredExtensions.add(Renderer.VK_EXT_DEBUG_UTILS_EXTENSION_NAME)
-        return VkDebugUtilsMessengerCallbackCreateInfo(createDebugCallback())
+        return org.aquila3d.core.vulkan.debug.VkDebugUtilsMessengerCallbackCreateInfo(
+            createDebugCallback()
+        )
     }
 
     override fun getDeviceSelector(): DeviceSelector {
@@ -133,21 +141,19 @@ open class JvmRendererEngine(private val isDebug: Boolean) : RendererEngine {
             queueCreateInfo[0].sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
                 .queueFamilyIndex(it)
                 .pQueuePriorities(pQueuePriorities)
-        } ?: throw IllegalStateException(
-            "Unable to create logical device due to missing graphics command queue family index. This is a bug " +
-                    "in the used DeviceSelector (${getDeviceSelector()::class.qualifiedName}) as the selected " +
-                    "VkPhysicalDevice does not support a required queue family. If you are using a library " +
-                    "provided DeviceSelector, please report this at https://github.com/Aquila3D/aquila/issues"
+        } ?: throw deviceSelectorError(
+            "Unable to create logical device.",
+            getDeviceSelector()::class.qualifiedName ?: "Unknown",
+            VkQueueFamilies.VK_QUEUE_GRAPHICS
         )
         physicalDevice.getQueueFamilyIndices()[VkQueueFamilies.VK_QUEUE_PRESENTATION]?.let {
             queueCreateInfo[1].sType(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO)
                 .queueFamilyIndex(it)
                 .pQueuePriorities(pQueuePriorities)
-        } ?: throw IllegalStateException(
-            "Unable to create logical device due to missing presentation command queue family index. This is a bug " +
-                    "in the used DeviceSelector (${getDeviceSelector()::class.qualifiedName}) as the selected " +
-                    "VkPhysicalDevice does not support a required queue family. If you are using a library " +
-                    "provided DeviceSelector, please report this at https://github.com/Aquila3D/aquila/issues"
+        } ?: throw deviceSelectorError(
+            "Unable to create logical device.",
+            getDeviceSelector()::class.qualifiedName ?: "Unknown",
+            VkQueueFamilies.VK_QUEUE_PRESENTATION
         )
 
         // Prepare te extension loading information
@@ -167,14 +173,18 @@ open class JvmRendererEngine(private val isDebug: Boolean) : RendererEngine {
             .ppEnabledLayerNames(null)
 
         val pDevice = memAllocPointer(1)
-        val err = vkCreateDevice(physicalDevice.device, deviceCreateInfo, null, pDevice)
+        val err = vkCreateDevice(physicalDevice.handle, deviceCreateInfo, null, pDevice)
         val device = pDevice[0]
         memFree(pDevice)
         if (err != VK_SUCCESS) {
             throw AssertionError("Failed to create device: " + VkResult(err))
         }
-        val logicalDevice = org.lwjgl.vulkan.VkDevice(device, physicalDevice.device, deviceCreateInfo)
-        val retval = VkDevice(logicalDevice, physicalDevice, requiredQueueFamilies())
+        val logicalDevice = org.lwjgl.vulkan.VkDevice(device, physicalDevice.handle, deviceCreateInfo)
+        val retval = org.aquila3d.core.vulkan.device.VkDevice(
+            logicalDevice,
+            physicalDevice,
+            requiredQueueFamilies()
+        )
 
         // Cleanup the native memory
         deviceCreateInfo.free()
@@ -232,7 +242,7 @@ open class JvmRendererEngine(private val isDebug: Boolean) : RendererEngine {
 
     @Suppress("MemberVisibilityCanBePrivate")
     protected fun createDebugCallback(): VkDebugUtilsMessengerCallback {
-        return VkDebugUtilsMessengerCallback()
+        return org.aquila3d.core.vulkan.debug.VkDebugUtilsMessengerCallback()
     }
 
     private suspend fun render() = withContext(renderThread.asCoroutineDispatcher()) {
