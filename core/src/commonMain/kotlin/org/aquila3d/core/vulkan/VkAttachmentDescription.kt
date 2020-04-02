@@ -2,6 +2,7 @@ package org.aquila3d.core.vulkan
 
 class VkAttachmentDescription {
 
+    val flags: Int
     val format: VkFormat
     val samples: VkSampleCountFlagBits
     val loadOp: VkAttachmentLoadOp
@@ -12,6 +13,7 @@ class VkAttachmentDescription {
     val finalLayout: VkImageLayout
 
     private constructor(
+        flags: Int,
         format: VkFormat,
         samples: VkSampleCountFlagBits,
         loadOp: VkAttachmentLoadOp,
@@ -21,6 +23,7 @@ class VkAttachmentDescription {
         initialLayout: VkImageLayout,
         finalLayout: VkImageLayout
     ) {
+        this.flags = flags
         this.format = format
         this.samples = samples
         this.loadOp = loadOp
@@ -34,6 +37,7 @@ class VkAttachmentDescription {
     @VkAttachmentDescriptionDslMarker
     companion object Builder {
 
+        var flags: Int = 0
         var format: VkFormat = VkFormat.VK_FORMAT_B8G8R8A8_UNORM
         var samples: VkSampleCountFlagBits = VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT
         var loadOp: VkAttachmentLoadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_CLEAR
@@ -42,6 +46,10 @@ class VkAttachmentDescription {
         var stencilStoreOp: VkAttachmentStoreOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE
         var initialLayout: VkImageLayout = VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED
         var finalLayout: VkImageLayout = VkImageLayout.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+
+        inline fun flags(flags: () -> Int) {
+            this.flags = flags()
+        }
 
         inline fun format(format: () -> VkFormat) {
             this.format = format()
@@ -76,6 +84,7 @@ class VkAttachmentDescription {
         }
 
         fun build(): VkAttachmentDescription = VkAttachmentDescription(
+            flags,
             format,
             samples,
             loadOp,
