@@ -84,17 +84,7 @@ class Renderer(
                 VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
             )
 
-        //TODO: This wont normally live here, its just a demonstration usage.
-        val attachmentDescription = attachmentDescription {
-            format { VkFormat.VK_FORMAT_B8G8R8A8_UNORM }
-            samples { VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT }
-            loadOp { VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_CLEAR }
-            storeOp { VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE }
-            stencilLoadOp { VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE }
-            stencilStoreOp { VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE }
-            initialLayout { VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED }
-            finalLayout { VkImageLayout.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR }
-        }
+        engine.buildDefaultRenderPass(swapchain!!)
     }
 
     override fun onWindowResized(width: Int, height: Int) {
