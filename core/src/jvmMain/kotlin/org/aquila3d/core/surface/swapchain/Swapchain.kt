@@ -11,7 +11,6 @@ import org.lwjgl.vulkan.KHRSwapchain.vkGetSwapchainImagesKHR
 import org.lwjgl.vulkan.VK10.*
 import org.lwjgl.vulkan.VkImageViewCreateInfo
 
-
 actual class Swapchain(val handle: Long, val format: VkSurfaceFormatKHR, val device: VkDevice) {
 
     private var images: Array<VkImage>
