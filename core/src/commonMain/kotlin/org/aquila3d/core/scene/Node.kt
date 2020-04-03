@@ -4,8 +4,9 @@ import org.aquila3d.core.math.Matrix4
 import org.aquila3d.core.math.MutableMatrix4
 import org.aquila3d.core.math.Quaternion
 import org.aquila3d.core.math.Vector3
+import org.aquila3d.core.renderable.Renderable
 
-class Node(val parent: Node? = null) {
+class Node(val parent: Node? = null, val renderable: Renderable? = null) {
 
     /**
      * The translation of this [Node] relative to its parent (if it has one)

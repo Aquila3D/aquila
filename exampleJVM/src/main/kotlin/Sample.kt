@@ -2,6 +2,7 @@ import com.toxicbakery.logging.Arbor
 import com.toxicbakery.logging.Seedling
 import org.aquila3d.core.input.InputEvent
 import org.aquila3d.core.input.InputEventListener
+import org.aquila3d.core.renderable.Renderable
 import org.aquila3d.core.renderer.JvmRendererEngine
 import org.aquila3d.core.renderer.Renderer
 import org.aquila3d.core.surface.Surface
@@ -41,4 +42,14 @@ fun main() {
         Arbor.e(e, "Caught exception from renderer.")
     }
     Arbor.d("Terminating...")
+}
+
+private val triangle = object : Renderable() {
+
+    override fun buildVertices(): FloatArray {
+        // The triangle will showup upside-down, because Vulkan does not do proper viewport transformation to
+        // account for inverted Y axis between the window coordinate system and clip space/NDC
+        // 3 vertices, 2 position components
+        return floatArrayOf(-0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f)
+    }
 }

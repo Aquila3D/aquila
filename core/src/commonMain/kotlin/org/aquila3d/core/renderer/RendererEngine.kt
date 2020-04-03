@@ -37,8 +37,6 @@ interface RendererEngine {
 
     fun unregisterInputEventListener(listener: InputEventListener)
 
-    fun buildDefaultRenderPass(swapchain: Swapchain)
-
     fun startRenderLoop()
 
     fun stopRenderLoop()

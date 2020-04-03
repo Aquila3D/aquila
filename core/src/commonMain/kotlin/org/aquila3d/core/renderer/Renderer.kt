@@ -84,7 +84,6 @@ class Renderer(
                 VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
             )
 
-        engine.buildDefaultRenderPass(swapchain!!)
     }
 
     override fun onWindowResized(width: Int, height: Int) {
