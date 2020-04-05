@@ -44,12 +44,9 @@ fun main() {
     Arbor.d("Terminating...")
 }
 
-private val triangle = object : Renderable() {
+// The triangle will showup upside-down, because Vulkan does not do proper viewport transformation to
+// account for inverted Y axis between the window coordinate system and clip space/NDC
+// 3 vertices, 2 position components
+private val triangle = object : Renderable(floatArrayOf(-0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f), null) {
 
-    override fun buildVertices(): FloatArray {
-        // The triangle will showup upside-down, because Vulkan does not do proper viewport transformation to
-        // account for inverted Y axis between the window coordinate system and clip space/NDC
-        // 3 vertices, 2 position components
-        return floatArrayOf(-0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f)
-    }
 }
